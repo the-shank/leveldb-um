@@ -179,7 +179,7 @@ class MemTableInserter : public WriteBatch::Handler {
     sequence_++;
   }
   void Put(const Slice& key, const Slice& value, const uint64_t ts) override {
-    mem_->Add(sequence_, kTypeValue, key, value);
+    mem_->Add(sequence_, kTypeValue, key, value, ts);
     sequence_++;
   }
   void Delete(const Slice& key) override {

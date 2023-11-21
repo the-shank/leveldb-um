@@ -66,6 +66,9 @@ class MemTable {
   // Else, return false.
   bool Get(const LookupKey& key, std::string* value, Status* s);
 
+  // timespec 
+  bool Get(const LookupKey& key, std::string* value, Status* s, uint64_t* ts);
+
  private:
   friend class MemTableIterator;
   friend class MemTableBackwardIterator;

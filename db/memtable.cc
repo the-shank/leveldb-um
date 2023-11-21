@@ -172,4 +172,10 @@ bool MemTable::Get(const LookupKey& key, std::string* value, Status* s) {
   return false;
 }
 
+// Sid: Added a wrappper here - we will add the code later
+bool MemTable::Get(const LookupKey& key, std::string* value, Status* s, uint64_t* ts) {
+  // TODO
+  return false;
+}
+
 }  // namespace leveldb

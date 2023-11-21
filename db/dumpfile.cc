@@ -89,6 +89,8 @@ class WriteBatchItemPrinter : public WriteBatch::Handler {
     AppendEscapedStringTo(&r, key);
     r += "' '";
     AppendEscapedStringTo(&r, value);
+    r += "' '";
+    AppendNumberTo(&r, ts);
     r += "'\n";
     dst_->Append(r);
   }
