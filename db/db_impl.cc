@@ -1194,7 +1194,8 @@ void DBImpl::ReleaseSnapshot(const Snapshot* snapshot) {
 
 // Convenience methods
 Status DBImpl::Put(const WriteOptions& o, const Slice& key, const Slice& val) {
-  return DB::Put(o, key, val);
+  global_timestamp++;
+  return DBImpl::Put(o, key, val, global_timestamp);
 }
 
 Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
@@ -1487,6 +1488,13 @@ void DBImpl::GetApproximateSizes(const Range* range, int n, uint64_t* sizes) {
 Status DB::Put(const WriteOptions& opt, const Slice& key, const Slice& value) {
   WriteBatch batch;
   batch.Put(key, value);
+  return Write(opt, &batch);
+}
+
+Status DBImpl::Put(const WriteOptions& opt, const Slice& key,
+                   const Slice& value, const uint64_t ts) {
+  WriteBatch batch;
+  batch.Put(key, value, ts);
   return Write(opt, &batch);
 }
 

@@ -74,6 +74,11 @@ void PutLengthPrefixedSlice(std::string* dst, const Slice& value) {
   dst->append(value.data(), value.size());
 }
 
+void PutLengthPrefixedU64(std::string* dst, const uint64_t value) {
+  PutVarint64(dst, sizeof(uint64_t));
+  PutVarint64(dst, value);
+}
+
 int VarintLength(uint64_t v) {
   int len = 1;
   while (v >= 128) {

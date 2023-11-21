@@ -9,6 +9,7 @@
 #include "db/log_writer.h"
 #include "db/snapshot.h"
 #include <atomic>
+#include <cstdint>
 #include <deque>
 #include <set>
 #include <string>
@@ -70,6 +71,10 @@ class DBImpl : public DB {
   bool GetProperty(const Slice& property, std::string* value) override;
   void GetApproximateSizes(const Range* range, int n, uint64_t* sizes) override;
   void CompactRange(const Slice* begin, const Slice* end) override;
+
+  // Stuff using UpdateMemo
+  Status Put(const WriteOptions&, const Slice& key, const Slice& value,
+             const uint64_t ts);
 
   // Extra methods (for testing) that are not in the public DB interface
 

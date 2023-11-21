@@ -49,6 +49,7 @@ class LEVELDB_EXPORT WriteBatch {
 
   // Store the mapping "key->value" in the database.
   void Put(const Slice& key, const Slice& value);
+  void Put(const Slice& key, const Slice& value, const uint64_t ts);
 
   // If the database contains a mapping for "key", erase it.  Else do nothing.
   void Delete(const Slice& key);
