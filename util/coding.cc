@@ -118,6 +118,18 @@ bool GetVarint32(Slice* input, uint32_t* value) {
   }
 }
 
+bool GetFixed64(Slice* input, uint64_t* value) {
+  const char* p = input->data();
+  *value = DecodeFixed64(p);
+  // TODO - fail gracefully if input too short
+  // if (q == nullptr) {
+  //   return false;
+  // } else {
+  *input = Slice(p + 8, input->size() - 8);
+  return true;
+  // }
+}
+
 const char* GetVarint64Ptr(const char* p, const char* limit, uint64_t* value) {
   uint64_t result = 0;
   for (uint32_t shift = 0; shift <= 63 && p < limit; shift += 7) {
