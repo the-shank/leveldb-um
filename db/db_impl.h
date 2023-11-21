@@ -75,7 +75,6 @@ class DBImpl : public DB {
   // Stuff using UpdateMemo
   Status PutUM(const WriteOptions&, const Slice& key, const Slice& value,
                const uint64_t ts);
-             const uint64_t ts);
 
   // Extra methods (for testing) that are not in the public DB interface
 

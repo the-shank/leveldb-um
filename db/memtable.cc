@@ -12,6 +12,9 @@
 #include "leveldb/iterator.h"
 
 #include "util/coding.h"
+#include <iostream>
+
+using namespace std;
 
 namespace leveldb {
 
@@ -112,13 +115,15 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
   //  value_size   : varint32 of value.size()
   //  value bytes  : char[value.size()]
   //  ts           : varint64
+  std::cout << "MemTable::AddUM called" << std::endl;
+
   size_t key_size = key.size();
   size_t val_size = value.size();
   size_t ts_size = sizeof(uint64_t);
   size_t internal_key_size = key_size + 8;
   const size_t encoded_len = VarintLength(internal_key_size) +
                              internal_key_size + VarintLength(val_size) +
-                             val_size + VarintLength(ts_size) + ts_size;
+                             val_size + ts_size;
   char* buf = arena_.Allocate(encoded_len);
   char* p = EncodeVarint32(buf, internal_key_size);
   std::memcpy(p, key.data(), key_size);
