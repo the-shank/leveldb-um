@@ -6,3 +6,6 @@
 # Build directory.
 build/
 out/
+wrapper_db
+a.out
+wrapper
