@@ -9,3 +9,4 @@ out/
 wrapper_db
 a.out
 wrapper
+.cache/clangd/index
