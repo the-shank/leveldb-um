@@ -145,10 +145,11 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
   std::memcpy(p, value.data(), val_size);
   /* assert(p + val_size == buf + encoded_len); */
   p += val_size;
+  std::cout << "Encoding val : " << value.data() << std::endl;
   std::cout << "Encoding ts: " << ts << std::endl;
   EncodeFixed64(p, ts);
   assert(p + ts_size == buf + encoded_len);
-  printHexDump(buf, encoded_len);
+  // printHexDump(buf, encoded_len);
   table_.Insert(buf);
 }
 
@@ -223,6 +224,7 @@ bool MemTable::Get(const LookupKey& key, std::string* value, Status* s,
           const char* val_ptr = GetVarint32Ptr(key_ptr + key_length, key_ptr + key_length + 5, &val_length);
           *ts = DecodeFixed64(val_ptr + val_length);
           std::cout << std::endl << "Decoded ts: " << *ts << std::endl;
+          std::cout << std::endl << "Decoded val: " << *value << std::endl;
           return true;
         }
         case kTypeDeletion:

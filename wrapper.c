@@ -42,6 +42,21 @@ void viewData(leveldb_t* db, leveldb_readoptions_t* roptions) {
   }
 }
 
+void deleteData(leveldb_t *db, leveldb_writeoptions_t *woptions) {
+  char key[100];
+  printf("Enter key to delete: ");
+  scanf("%s", key);
+
+  char *err = NULL;
+  leveldb_delete(db, woptions, key, strlen(key), &err);
+  if (err != NULL) {
+    fprintf(stderr, "Error deleting data: %s\n", err);
+    free(err);
+  } else {
+    printf("Data deleted successfully.\n");
+  }
+}
+
 void viewAll(leveldb_t* db, leveldb_readoptions_t* roptions) {
   leveldb_iterator_t* it = leveldb_create_iterator(db, roptions);
 
@@ -79,7 +94,7 @@ int main(int argc, char** argv) {
 
   while (1) {
     printf(
-        "\n1. Add Data\n2. View Data\n3. View All\n4. Exit\nEnter your "
+        "\n1. Add Data\n2. View Data\n3. View All\n4. Delete\n5. Exit\nEnter your "
         "choice: ");
     int choice;
     scanf("%d", &choice);
@@ -95,6 +110,9 @@ int main(int argc, char** argv) {
         viewAll(db, roptions);
         break;
       case 4:
+        deleteData(db, woptions);
+        break;
+      case 5:
         leveldb_close(db);
         return 0;
       default:

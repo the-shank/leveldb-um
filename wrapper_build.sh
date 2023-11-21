@@ -3,4 +3,4 @@
 set -eu
 set -o pipefail
 
-g++ wrapper.c -L ./build/ -I ./include/ -lleveldb -lsnappy -lpthread -o wrapper
+g++ wrapper.c -L ./build/ -I ./include/ -lleveldb -lpthread -o wrapper
