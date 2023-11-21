@@ -111,8 +111,7 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
   //  tag          : uint64((sequence << 8) | type)
   //  value_size   : varint32 of value.size()
   //  value bytes  : char[value.size()]
-  //  ts_size      : uint32_t (8)
-  //  ts           : uint64_t
+  //  ts           : varint64
   size_t key_size = key.size();
   size_t val_size = value.size();
   size_t ts_size = sizeof(uint64_t);
@@ -130,7 +129,6 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
   std::memcpy(p, value.data(), val_size);
   /* assert(p + val_size == buf + encoded_len); */
   p += val_size;
-  EncodeFixed32(p, ts_size);
   EncodeVarint64(p, ts);
   assert(p + ts_size == buf + encoded_len);
   table_.Insert(buf);
@@ -173,8 +171,44 @@ bool MemTable::Get(const LookupKey& key, std::string* value, Status* s) {
 }
 
 // Sid: Added a wrappper here - we will add the code later
-bool MemTable::Get(const LookupKey& key, std::string* value, Status* s, uint64_t* ts) {
-  // TODO
+bool MemTable::Get(const LookupKey& key, std::string* value, Status* s,
+                   uint64_t* ts) {
+  Slice memkey = key.memtable_key();
+  Table::Iterator iter(&table_);
+  iter.Seek(memkey.data());
+  if (iter.Valid()) {
+    // entry format is:
+    //    klength  varint32
+    //    userkey  char[klength]
+    //    tag      uint64
+    //    vlength  varint32
+    //    value    char[vlength]
+    //    ts       varint64
+    // Check that it belongs to same user key.  We do not check the
+    // sequence number since the Seek() call above should have skipped
+    // all entries with overly large sequence numbers.
+    const char* entry = iter.key();
+    uint32_t key_length;
+    const char* key_ptr = GetVarint32Ptr(entry, entry + 5, &key_length);
+    if (comparator_.comparator.user_comparator()->Compare(
+            Slice(key_ptr, key_length - 8), key.user_key()) == 0) {
+      // Correct user key
+      const uint64_t tag = DecodeFixed64(key_ptr + key_length - 8);
+      switch (static_cast<ValueType>(tag & 0xff)) {
+        case kTypeValue: {
+          Slice v = GetLengthPrefixedSlice(key_ptr + key_length);
+          value->assign(v.data(), v.size());
+          // decode the var 64 int here to ts
+          *ts =
+              DecodeFixed64(key_ptr + key_length + v.size() + sizeof(uint32_t));
+          return true;
+        }
+        case kTypeDeletion:
+          *s = Status::NotFound(Slice());
+          return true;
+      }
+    }
+  }
   return false;
 }
 
