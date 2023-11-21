@@ -4,19 +4,20 @@
 
 #include "leveldb/dumpfile.h"
 
-#include <cstdio>
-
 #include "db/dbformat.h"
 #include "db/filename.h"
 #include "db/log_reader.h"
 #include "db/version_edit.h"
 #include "db/write_batch_internal.h"
+#include <cstdio>
+
 #include "leveldb/env.h"
 #include "leveldb/iterator.h"
 #include "leveldb/options.h"
 #include "leveldb/status.h"
 #include "leveldb/table.h"
 #include "leveldb/write_batch.h"
+
 #include "util/logging.h"
 
 namespace leveldb {
@@ -75,6 +76,15 @@ Status PrintLogContents(Env* env, const std::string& fname,
 class WriteBatchItemPrinter : public WriteBatch::Handler {
  public:
   void Put(const Slice& key, const Slice& value) override {
+    std::string r = "  put '";
+    AppendEscapedStringTo(&r, key);
+    r += "' '";
+    AppendEscapedStringTo(&r, value);
+    r += "'\n";
+    dst_->Append(r);
+  }
+  void Put(const Slice& key, const Slice& value, const uint64_t ts) override {
+    // TODO: implement this
     std::string r = "  put '";
     AppendEscapedStringTo(&r, key);
     r += "' '";

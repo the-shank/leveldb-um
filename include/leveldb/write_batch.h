@@ -21,6 +21,7 @@
 #ifndef STORAGE_LEVELDB_INCLUDE_WRITE_BATCH_H_
 #define STORAGE_LEVELDB_INCLUDE_WRITE_BATCH_H_
 
+#include <cstdint>
 #include <string>
 
 #include "leveldb/export.h"
@@ -36,6 +37,8 @@ class LEVELDB_EXPORT WriteBatch {
    public:
     virtual ~Handler();
     virtual void Put(const Slice& key, const Slice& value) = 0;
+    virtual void Put(const Slice& key, const Slice& value,
+                     const uint64_t ts) = 0;
     virtual void Delete(const Slice& key) = 0;
   };
 
@@ -72,6 +75,7 @@ class LEVELDB_EXPORT WriteBatch {
 
   // Support for iterating over the contents of a batch.
   Status Iterate(Handler* handler) const;
+  Status IterateUM(Handler* handler) const;
 
  private:
   friend class WriteBatchInternal;

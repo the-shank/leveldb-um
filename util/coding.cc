@@ -75,7 +75,7 @@ void PutLengthPrefixedSlice(std::string* dst, const Slice& value) {
 }
 
 void PutLengthPrefixedU64(std::string* dst, const uint64_t value) {
-  PutVarint64(dst, sizeof(uint64_t));
+  PutVarint32(dst, sizeof(uint64_t));
   PutVarint64(dst, value);
 }
 
@@ -153,6 +153,16 @@ bool GetLengthPrefixedSlice(Slice* input, Slice* result) {
     *result = Slice(input->data(), len);
     input->remove_prefix(len);
     return true;
+  } else {
+    return false;
+  }
+}
+
+bool GetLengthPrefixedU64(Slice* input, uint64_t* result) {
+  uint32_t len = 8;
+  if (input->size() >= len) {
+    input->remove_prefix(len);
+    return GetVarint64(input, result);
   } else {
     return false;
   }

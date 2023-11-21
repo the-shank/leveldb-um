@@ -5,11 +5,13 @@
 #ifndef STORAGE_LEVELDB_DB_MEMTABLE_H_
 #define STORAGE_LEVELDB_DB_MEMTABLE_H_
 
-#include <string>
-
 #include "db/dbformat.h"
 #include "db/skiplist.h"
+#include <cstdint>
+#include <string>
+
 #include "leveldb/db.h"
+
 #include "util/arena.h"
 
 namespace leveldb {
@@ -55,6 +57,8 @@ class MemTable {
   // Typically value will be empty if type==kTypeDeletion.
   void Add(SequenceNumber seq, ValueType type, const Slice& key,
            const Slice& value);
+  void Add(SequenceNumber seq, ValueType type, const Slice& key,
+           const Slice& value, const uint64_t ts);
 
   // If memtable contains a value for key, store it in *value and return true.
   // If memtable contains a deletion for key, store a NotFound() error

@@ -18,6 +18,7 @@
 #include "db/dbformat.h"
 #include "db/memtable.h"
 #include "db/write_batch_internal.h"
+#include <cstdint>
 #include <iostream>
 
 #include "leveldb/db.h"
@@ -65,6 +66,49 @@ Status WriteBatch::Iterate(Handler* handler) const {
         }
         break;
       case kTypeDeletion:
+        if (GetLengthPrefixedSlice(&input, &key)) {
+          handler->Delete(key);
+        } else {
+          return Status::Corruption("bad WriteBatch Delete");
+        }
+        break;
+      default:
+        return Status::Corruption("unknown WriteBatch tag");
+    }
+  }
+  if (found != WriteBatchInternal::Count(this)) {
+    return Status::Corruption("WriteBatch has wrong count");
+  } else {
+    return Status::OK();
+  }
+}
+
+Status WriteBatch::IterateUM(Handler* handler) const {
+  Slice input(rep_);
+  if (input.size() < kHeader) {
+    return Status::Corruption("malformed WriteBatch (too small)");
+  }
+
+  input.remove_prefix(kHeader);
+  Slice key, value;
+  uint64_t ts;
+  int found = 0;
+  while (!input.empty()) {
+    found++;
+    char tag = input[0];
+    input.remove_prefix(1);
+    switch (tag) {
+      case kTypeValue:
+        if (GetLengthPrefixedSlice(&input, &key) &&
+            GetLengthPrefixedSlice(&input, &value) &&
+            GetLengthPrefixedU64(&input, &ts)) {
+          handler->Put(key, value);
+        } else {
+          return Status::Corruption("bad WriteBatch Put");
+        }
+        break;
+      case kTypeDeletion:
+        // TODO: add timestamp to deletion as well
         if (GetLengthPrefixedSlice(&input, &key)) {
           handler->Delete(key);
         } else {
@@ -134,6 +178,10 @@ class MemTableInserter : public WriteBatch::Handler {
     mem_->Add(sequence_, kTypeValue, key, value);
     sequence_++;
   }
+  void Put(const Slice& key, const Slice& value, const uint64_t ts) override {
+    mem_->Add(sequence_, kTypeValue, key, value);
+    sequence_++;
+  }
   void Delete(const Slice& key) override {
     mem_->Add(sequence_, kTypeDeletion, key, Slice());
     sequence_++;
@@ -145,7 +193,8 @@ Status WriteBatchInternal::InsertInto(const WriteBatch* b, MemTable* memtable) {
   MemTableInserter inserter;
   inserter.sequence_ = WriteBatchInternal::Sequence(b);
   inserter.mem_ = memtable;
-  return b->Iterate(&inserter);
+  /* return b->Iterate(&inserter); */
+  return b->IterateUM(&inserter);
 }
 
 void WriteBatchInternal::SetContents(WriteBatch* b, const Slice& contents) {

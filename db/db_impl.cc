@@ -1232,6 +1232,8 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
     // into mem_.
     {
       mutex_.Unlock();
+      // NOTE: log should also have the timestamp info, I suppose.
+      // we dont need to do anything since we added it to the batch.
       status = log_->AddRecord(WriteBatchInternal::Contents(write_batch));
       bool sync_error = false;
       if (status.ok() && options.sync) {
@@ -1241,6 +1243,7 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
         }
       }
       if (status.ok()) {
+        // TODO: this is where we should add the timestamp info
         status = WriteBatchInternal::InsertInto(write_batch, mem_);
       }
       mutex_.Lock();

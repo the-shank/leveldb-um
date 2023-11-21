@@ -4,10 +4,9 @@
 
 #include "leveldb/c.h"
 
-#include <string.h>
-
 #include <cstdint>
 #include <cstdlib>
+#include <string.h>
 
 #include "leveldb/cache.h"
 #include "leveldb/comparator.h"
@@ -350,6 +349,10 @@ void leveldb_writebatch_iterate(const leveldb_writebatch_t* b, void* state,
     void (*put_)(void*, const char* k, size_t klen, const char* v, size_t vlen);
     void (*deleted_)(void*, const char* k, size_t klen);
     void Put(const Slice& key, const Slice& value) override {
+      (*put_)(state_, key.data(), key.size(), value.data(), value.size());
+    }
+    void Put(const Slice& key, const Slice& value, const uint64_t ts) override {
+      // TODO: fix this
       (*put_)(state_, key.data(), key.size(), value.data(), value.size());
     }
     void Delete(const Slice& key) override {
