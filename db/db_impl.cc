@@ -1526,6 +1526,7 @@ Status DBImpl::PutUM(const WriteOptions& opt, const Slice& key,
 }
 
 Status DB::Delete(const WriteOptions& opt, const Slice& key) {
+  std::cout << "DB::Delete\n";
   WriteBatch batch;
   batch.Delete(key);
   return Write(opt, &batch);
