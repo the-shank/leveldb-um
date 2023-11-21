@@ -1204,24 +1204,25 @@ Status DBImpl::Put(const WriteOptions& o, const Slice& key, const Slice& val) {
   return DBImpl::PutUM(o, key, val, global_timestamp);
 }
 
+// NOTE: shank: deleting will only update the UM, not the memtable.
 Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
-  // TODO: shank: deleting will only update the UM, not the memtable.
-
   global_timestamp++;
 
   // get the entry corresponding to the key from the `um.memo_` map
   std::string keystr{key.ToString()};
   if (um.memo_.find(keystr) == um.memo_.end()) {
-    // TODO: shank: impl
-    auto value_ts_pair = um.memo_.at(keystr);
+    auto ts_cnt_pair = um.memo_.at(keystr);
+    ts_cnt_pair.second++;
+    ts_cnt_pair.first = global_timestamp;
 
   } else {
-    // TODO: shank: impl
+    um.memo_.insert(std::make_pair(
+        keystr, std::make_pair<uint64_t, uint64_t>(global_timestamp, 1)));
   }
   um.memo_.at(key.ToString());
 
   /* return DB::Delete(options, key); */
-  return Status::NotSupported("DBImpl::Delete not implemented yet");
+  return Status::OK();
 }
 
 Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
