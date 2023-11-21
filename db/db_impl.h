@@ -31,6 +31,13 @@ class VersionSet;
 // the UpdateMemo class
 class UpdateMemo {
  public:
+  UpdateMemo() = default;
+
+  UpdateMemo(const UpdateMemo&) = delete;
+  UpdateMemo& operator=(const UpdateMemo&) = delete;
+
+  size_t size() const { return memo_.size(); }
+
  private:
   // the backing hashmap (the actual memo data)
   // mapping from key to (timestamp, count)
