@@ -90,7 +90,6 @@ class WriteBatchItemPrinter : public WriteBatch::Handler {
     // TODO: implement this
 
     std::cout << "WriteBatchItemPrinter::PutUM called" << std::endl;
-
     std::string r = "  put '";
     AppendEscapedStringTo(&r, key);
     r += "' '";

@@ -108,6 +108,15 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
   table_.Insert(buf);
 }
 
+void printHexDump(char *p, uint64_t len) {
+  std::ios_base::fmtflags f( cout.flags() );
+  for (uint64_t i = 0; i < len; i++) {
+    std::cout << std::hex << (int)p[i] << " ";
+  }
+  cout.flags( f );
+  std::cout << std::endl;
+}
+
 void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
                    const Slice& value, const uint64_t ts) {
   // Format of an entry is concatenation of:
@@ -136,10 +145,14 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
   std::memcpy(p, value.data(), val_size);
   /* assert(p + val_size == buf + encoded_len); */
   p += val_size;
-  EncodeVarint64(p, ts);
+  std::cout << "Encoding ts: " << ts << std::endl;
+  EncodeFixed64(p, ts);
   assert(p + ts_size == buf + encoded_len);
+  printHexDump(buf, encoded_len);
   table_.Insert(buf);
 }
+
+
 
 bool MemTable::Get(const LookupKey& key, std::string* value, Status* s) {
   Slice memkey = key.memtable_key();
@@ -206,8 +219,10 @@ bool MemTable::Get(const LookupKey& key, std::string* value, Status* s,
           Slice v = GetLengthPrefixedSlice(key_ptr + key_length);
           value->assign(v.data(), v.size());
           // decode the var 64 int here to ts
-          *ts =
-              DecodeFixed64(key_ptr + key_length + v.size() + sizeof(uint32_t));
+          uint32_t val_length;
+          const char* val_ptr = GetVarint32Ptr(key_ptr + key_length, key_ptr + key_length + 5, &val_length);
+          *ts = DecodeFixed64(val_ptr + val_length);
+          std::cout << std::endl << "Decoded ts: " << *ts << std::endl;
           return true;
         }
         case kTypeDeletion:
