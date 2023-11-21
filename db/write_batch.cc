@@ -160,7 +160,7 @@ void WriteBatch::Put(const Slice& key, const Slice& value, const uint64_t ts) {
   rep_.push_back(static_cast<char>(kTypeValue));
   PutLengthPrefixedSlice(&rep_, key);
   PutLengthPrefixedSlice(&rep_, value);
-  PutVarint64(&rep_, ts);
+  PutFixed64(&rep_, ts);
 }
 
 void WriteBatch::Delete(const Slice& key) {
