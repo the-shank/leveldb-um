@@ -39,7 +39,7 @@ class UpdateMemo {
 
   size_t size() const { return memo_.size(); }
 
- private:
+  /* private: */
   // the backing hashmap (the actual memo data)
   // mapping from key to (timestamp, count)
   // NOTE: using a pointer here might be more performant, but then, remember:
