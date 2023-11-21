@@ -144,6 +144,7 @@ void WriteBatchInternal::SetSequence(WriteBatch* b, SequenceNumber seq) {
 }
 
 void WriteBatch::Put(const Slice& key, const Slice& value) {
+  std::cout << ">> WriteBatch::Put" << std::endl;
   WriteBatchInternal::SetCount(this, WriteBatchInternal::Count(this) + 1);
   rep_.push_back(static_cast<char>(kTypeValue));
   PutLengthPrefixedSlice(&rep_, key);
@@ -151,7 +152,7 @@ void WriteBatch::Put(const Slice& key, const Slice& value) {
 }
 
 void WriteBatch::Put(const Slice& key, const Slice& value, const uint64_t ts) {
-  std::cout << ">> WriteBatch::Put" << std::endl;
+  std::cout << ">> WriteBatch::PutUM" << std::endl;
   WriteBatchInternal::SetCount(this, WriteBatchInternal::Count(this) + 1);
   rep_.push_back(static_cast<char>(kTypeValue));
   PutLengthPrefixedSlice(&rep_, key);
@@ -176,10 +177,12 @@ class MemTableInserter : public WriteBatch::Handler {
   MemTable* mem_;
 
   void Put(const Slice& key, const Slice& value) override {
+    std::cout << "MemTableInserter::Put called" << std::endl;
     mem_->Add(sequence_, kTypeValue, key, value);
     sequence_++;
   }
   void Put(const Slice& key, const Slice& value, const uint64_t ts) override {
+    std::cout << "MemTableInserter::PutUM called" << std::endl;
     mem_->Add(sequence_, kTypeValue, key, value, ts);
     sequence_++;
   }

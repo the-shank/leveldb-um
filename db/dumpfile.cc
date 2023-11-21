@@ -19,6 +19,7 @@
 #include "leveldb/write_batch.h"
 
 #include "util/logging.h"
+#include <iostream>
 
 namespace leveldb {
 
@@ -76,6 +77,8 @@ Status PrintLogContents(Env* env, const std::string& fname,
 class WriteBatchItemPrinter : public WriteBatch::Handler {
  public:
   void Put(const Slice& key, const Slice& value) override {
+    std::cout << "WriteBatchItemPrinter::Put called" << std::endl;
+
     std::string r = "  put '";
     AppendEscapedStringTo(&r, key);
     r += "' '";
@@ -85,6 +88,9 @@ class WriteBatchItemPrinter : public WriteBatch::Handler {
   }
   void Put(const Slice& key, const Slice& value, const uint64_t ts) override {
     // TODO: implement this
+
+    std::cout << "WriteBatchItemPrinter::PutUM called" << std::endl;
+
     std::string r = "  put '";
     AppendEscapedStringTo(&r, key);
     r += "' '";

@@ -347,13 +347,17 @@ void leveldb_writebatch_iterate(const leveldb_writebatch_t* b, void* state,
    public:
     void* state_;
     void (*put_)(void*, const char* k, size_t klen, const char* v, size_t vlen);
+    void (*putum_)(void*, const char* k, size_t klen, const char* v,
+                   size_t vlen, uint64_t ts);
     void (*deleted_)(void*, const char* k, size_t klen);
     void Put(const Slice& key, const Slice& value) override {
+      printf("leveldb_writebatch_iterate::Put called\n");
       (*put_)(state_, key.data(), key.size(), value.data(), value.size());
     }
     void Put(const Slice& key, const Slice& value, const uint64_t ts) override {
+      printf("leveldb_writebatch_iterate::PutUM called\n");
       // TODO: fix this
-      (*put_)(state_, key.data(), key.size(), value.data(), value.size());
+      (*putum_)(state_, key.data(), key.size(), value.data(), value.size(), ts);
     }
     void Delete(const Slice& key) override {
       (*deleted_)(state_, key.data(), key.size());
