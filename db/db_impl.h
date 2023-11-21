@@ -73,7 +73,8 @@ class DBImpl : public DB {
   void CompactRange(const Slice* begin, const Slice* end) override;
 
   // Stuff using UpdateMemo
-  Status Put(const WriteOptions&, const Slice& key, const Slice& value,
+  Status PutUM(const WriteOptions&, const Slice& key, const Slice& value,
+               const uint64_t ts);
              const uint64_t ts);
 
   // Extra methods (for testing) that are not in the public DB interface
