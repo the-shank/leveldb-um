@@ -1206,12 +1206,12 @@ Status DBImpl::Put(const WriteOptions& o, const Slice& key, const Slice& val) {
 
 // NOTE: shank: deleting will only update the UM, not the memtable.
 Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
-  
+
   global_timestamp++;
 
   // get the entry corresponding to the key from the `um.memo_` map
   std::string keystr{key.ToString()};
-  if (um.memo_.find(keystr) == um.memo_.end()) {
+  if (um.memo_.find(keystr) != um.memo_.end()) {
     auto ts_cnt_pair = um.memo_.at(keystr);
     ts_cnt_pair.second++;
     ts_cnt_pair.first = global_timestamp;
