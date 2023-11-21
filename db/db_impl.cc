@@ -1149,9 +1149,11 @@ Status DBImpl::Get(const ReadOptions& options, const Slice& key,
     /* if (mem->Get(lkey, value, &s)) { */
     if (mem->Get(lkey, value, &s, &ts)) {
       // Done
-    } else if (imm != nullptr && imm->Get(lkey, value, &s)) {
+      /* } else if (imm != nullptr && imm->Get(lkey, value, &s)) { */
+    } else if (imm != nullptr && imm->Get(lkey, value, &s, &ts)) {
       // Done
     } else {
+      // TODO: shank: udpate this for supporting ts?
       s = current->Get(options, lkey, value, &stats);
       have_stat_update = true;
     }
