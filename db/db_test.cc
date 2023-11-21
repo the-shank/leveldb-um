@@ -2152,6 +2152,10 @@ class ModelDB : public DB {
       void Put(const Slice& key, const Slice& value) override {
         (*map_)[key.ToString()] = value.ToString();
       }
+      void Put(const Slice& key, const Slice& value, const uint64_t ts) override {
+        // TODO: fix
+        (*map_)[key.ToString()] = value.ToString();
+      }
       void Delete(const Slice& key) override { map_->erase(key.ToString()); }
     };
     Handler handler;
