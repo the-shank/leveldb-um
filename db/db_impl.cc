@@ -1231,6 +1231,7 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
     WriteBatch* write_batch = BuildBatchGroup(&last_writer);
     WriteBatchInternal::SetSequence(write_batch, last_sequence + 1);
     last_sequence += WriteBatchInternal::Count(write_batch);
+    std::cout << "Write:LastSequence: " << last_sequence << "\n";
 
     // Add to log and apply to memtable.  We can release the lock
     // during this phase since &w is currently responsible for logging

@@ -94,6 +94,7 @@ Status WriteBatch::IterateUM(Handler* handler) const {
   uint64_t ts;
   int found = 0;
   while (!input.empty()) {
+    std::cout << ">> WriteBatch::IterateUM: Looping : " << found << std::endl;
     found++;
     char tag = input[0];
     input.remove_prefix(1);
@@ -101,11 +102,13 @@ Status WriteBatch::IterateUM(Handler* handler) const {
       case kTypeValue:
         if (GetLengthPrefixedSlice(&input, &key) &&
             GetLengthPrefixedSlice(&input, &value) &&
-            GetLengthPrefixedU64(&input, &ts)) {
+            GetVarint64(&input, &ts)) {
           /* handler->Put(key, value); */
+          std::cout << ">> WriteBatch::IterateUM: Calling Put" << std::endl;
           handler->Put(key, value, ts);
         } else {
-          return Status::Corruption("bad WriteBatch Put");
+          std::cout << ">> WriteBatch::IterateUM: Bad Put" << std::endl;
+          return Status::Corruption("bad UM WriteBatch Put");
         }
         break;
       case kTypeDeletion:
@@ -113,7 +116,7 @@ Status WriteBatch::IterateUM(Handler* handler) const {
         if (GetLengthPrefixedSlice(&input, &key)) {
           handler->Delete(key);
         } else {
-          return Status::Corruption("bad WriteBatch Delete");
+          return Status::Corruption("bad UM WriteBatch Delete");
         }
         break;
       default:
@@ -157,7 +160,7 @@ void WriteBatch::Put(const Slice& key, const Slice& value, const uint64_t ts) {
   rep_.push_back(static_cast<char>(kTypeValue));
   PutLengthPrefixedSlice(&rep_, key);
   PutLengthPrefixedSlice(&rep_, value);
-  PutLengthPrefixedU64(&rep_, ts);
+  PutVarint64(&rep_, ts);
 }
 
 void WriteBatch::Delete(const Slice& key) {
