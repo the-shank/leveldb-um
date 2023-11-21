@@ -30,3 +30,14 @@
 
 - [ ] when searching:
     - TODO
+
+- [ ] cleaning UM:
+
+  - [ ] vacuum cleaning:
+    - TODO
+
+  - [ ] clean upon flush
+    - TODO
+
+  - [ ] clean upon merge
+    - TODO
