@@ -102,7 +102,8 @@ Status WriteBatch::IterateUM(Handler* handler) const {
         if (GetLengthPrefixedSlice(&input, &key) &&
             GetLengthPrefixedSlice(&input, &value) &&
             GetLengthPrefixedU64(&input, &ts)) {
-          handler->Put(key, value);
+          /* handler->Put(key, value); */
+          handler->Put(key, value, ts);
         } else {
           return Status::Corruption("bad WriteBatch Put");
         }
