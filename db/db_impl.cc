@@ -1252,7 +1252,7 @@ Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
       um.memo_[keystr].first = global_timestamp;
   } else {
       // Insert a new pair if key doesn't exist
-      um.memo_[keystr] = std::make_pair(global_timestamp, 1);
+      um.memo_[keystr] = std::make_pair((uint64_t)global_timestamp, 1);
   }
 
   um.print();
