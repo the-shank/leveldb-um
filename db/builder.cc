@@ -34,6 +34,7 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
     meta->smallest.DecodeFrom(iter->key());
     Slice key;
     for (; iter->Valid(); iter->Next()) {
+      // TODO: shank: write the timestamp as well (sid)
       key = iter->key();
       builder->Add(key, iter->value());
     }

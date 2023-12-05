@@ -510,6 +510,7 @@ Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
 // TODO: shank: consider UM when writing to young-level
 Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
                                 Version* base) {
+  std::cout << ">> DBImpl::WriteLevel0Table\n";
   mutex_.AssertHeld();
   const uint64_t start_micros = env_->NowMicros();
   FileMetaData meta;
