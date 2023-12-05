@@ -666,6 +666,7 @@ void DBImpl::RecordBackgroundError(const Status& s) {
 }
 
 void DBImpl::MaybeScheduleCompaction() {
+  std::cout << ">> DBImpl::MaybeScheduleCompaction()\n";
   mutex_.AssertHeld();
   if (background_compaction_scheduled_) {
     // Already scheduled
@@ -687,6 +688,7 @@ void DBImpl::BGWork(void* db) {
 }
 
 void DBImpl::BackgroundCall() {
+  std::cout << ">> DBImpl::BackgroundCall()\n";
   MutexLock l(&mutex_);
   assert(background_compaction_scheduled_);
   if (shutting_down_.load(std::memory_order_acquire)) {
@@ -706,6 +708,7 @@ void DBImpl::BackgroundCall() {
 }
 
 void DBImpl::BackgroundCompaction() {
+  std::cout << ">> DBImpl::BackgroundCompaction()\n";
   mutex_.AssertHeld();
 
   if (imm_ != nullptr) {
