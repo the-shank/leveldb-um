@@ -39,6 +39,9 @@ class UpdateMemo {
 
   size_t size() const { return memo_.size(); }
 
+  // print the memo state
+  void print();
+
   /* private: */
   // the backing hashmap (the actual memo data)
   // mapping from key to (timestamp, count)

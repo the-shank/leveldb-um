@@ -1125,6 +1125,9 @@ int64_t DBImpl::TEST_MaxNextLevelOverlappingBytes() {
 // TODO: shank: uptate to use timestamp
 Status DBImpl::Get(const ReadOptions& options, const Slice& key,
                    std::string* value) {
+  
+  std::cout << "DBImpl::Get" << std::endl;
+
   Status s;
   MutexLock l(&mutex_);
   SequenceNumber snapshot;
@@ -1165,6 +1168,18 @@ Status DBImpl::Get(const ReadOptions& options, const Slice& key,
     }
     mutex_.Lock();
   }
+
+  // Check the UpdateMemo
+  // Invalidate the entry if the timestamp is older than the one in the UM
+  std::string keystr{key.ToString()};
+  // Check if key exists in the map
+  if (um.memo_.count(keystr) > 0) {
+      // Update the existing pair
+      if (um.memo_[keystr].first > ts) {
+          // Invalidate the entry
+          s = Status::NotFound(Slice());
+      }
+  } 
 
   if (have_stat_update && current->UpdateStats(stats)) {
     MaybeScheduleCompaction();
@@ -1217,19 +1232,22 @@ Status DBImpl::Put(const WriteOptions& o, const Slice& key, const Slice& val) {
 Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
   std::cout << std::endl << ">> DBImpl::Delete" << std::endl;
   global_timestamp++;
+  std ::cout << "global_timestamp: " << global_timestamp << std::endl;
 
-  // get the entry corresponding to the key from the `um.memo_` map
-  std::string keystr{key.ToString()};
-  if (um.memo_.find(keystr) != um.memo_.end()) {
-    auto ts_cnt_pair = um.memo_.at(keystr);
-    ts_cnt_pair.second++;
-    ts_cnt_pair.first = global_timestamp;
+  // Convert key to string once
+  std::string keystr = key.ToString();
 
+  // Check if key exists in the map
+  if (um.memo_.count(keystr) > 0) {
+      // Update the existing pair
+      um.memo_[keystr].second++;
+      um.memo_[keystr].first = global_timestamp;
   } else {
-    um.memo_.insert(std::make_pair(
-        keystr, std::make_pair<uint64_t, uint64_t>(global_timestamp, 1)));
+      // Insert a new pair if key doesn't exist
+      um.memo_[keystr] = std::make_pair(global_timestamp, 1);
   }
-  um.memo_.at(key.ToString());
+
+  um.print();
 
   /* return DB::Delete(options, key); */
   return Status::OK();
@@ -1532,7 +1550,21 @@ Status DB::Put(const WriteOptions& opt, const Slice& key, const Slice& value) {
 
 Status DBImpl::PutUM(const WriteOptions& opt, const Slice& key,
                      const Slice& value, const uint64_t ts) {
+  std::cout << "DBImpl::PutUM\n";
   WriteBatch batch;
+
+  // add an entry to the UM
+  std::string keystr{key.ToString()};
+  // if the key is already present, update the timestamp and count
+  if (um.memo_.count(keystr) > 0) {
+      // Update the existing pair
+      um.memo_[keystr].second++;
+      um.memo_[keystr].first = ts;
+  } else {
+      // Insert a new pair if key doesn't exist
+      um.memo_[keystr] = std::make_pair(ts, 0);
+  }
+
   batch.Put(key, value, ts);
   return Write(opt, &batch);
 }
@@ -1621,5 +1653,14 @@ Status DestroyDB(const std::string& dbname, const Options& options) {
   }
   return result;
 }
+
+void UpdateMemo::print() {
+  std::cout << "UpdateMemo::print()\n";
+  for (auto& kv : memo_) {
+    std::cout << kv.first << " : " << kv.second.first << " : "
+              << kv.second.second << "\n";
+  }
+}
+
 
 }  // namespace leveldb
