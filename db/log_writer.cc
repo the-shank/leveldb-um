@@ -7,6 +7,7 @@
 #include <cstdint>
 
 #include "leveldb/env.h"
+
 #include "util/coding.h"
 #include "util/crc32c.h"
 
@@ -79,6 +80,7 @@ Status Writer::AddRecord(const Slice& slice) {
   return s;
 }
 
+// TODO: shank: do we need to modify this for UM?
 Status Writer::EmitPhysicalRecord(RecordType t, const char* ptr,
                                   size_t length) {
   assert(length <= 0xffff);  // Must fit in two bytes

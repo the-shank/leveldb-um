@@ -101,8 +101,7 @@ Status WriteBatch::IterateUM(Handler* handler) const {
     switch (tag) {
       case kTypeValue:
         if (GetLengthPrefixedSlice(&input, &key) &&
-            GetLengthPrefixedSlice(&input, &value) &&
-            GetFixed64(&input, &ts)) {
+            GetLengthPrefixedSlice(&input, &value) && GetFixed64(&input, &ts)) {
           /* handler->Put(key, value); */
           std::cout << ">> WriteBatch::IterateUM: Calling Put" << std::endl;
           handler->Put(key, value, ts);

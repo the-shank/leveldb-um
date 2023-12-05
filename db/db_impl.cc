@@ -456,6 +456,7 @@ Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
       *max_sequence = last_seq;
     }
 
+    // NOTE: shank: options_.write_buffer_size = 4MB
     if (mem->ApproximateMemoryUsage() > options_.write_buffer_size) {
       compactions++;
       *save_manifest = true;
@@ -506,6 +507,7 @@ Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
   return status;
 }
 
+// TODO: shank: consider UM when writing to young-level
 Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
                                 Version* base) {
   mutex_.AssertHeld();
@@ -1200,13 +1202,16 @@ void DBImpl::ReleaseSnapshot(const Snapshot* snapshot) {
 
 // Convenience methods
 Status DBImpl::Put(const WriteOptions& o, const Slice& key, const Slice& val) {
+  // TODO: shank: where does this get appended to the log file?
+  // same question for delete?
+  std::cout << ">> DBImpl::Put" << std::endl;
   global_timestamp++;
   return DBImpl::PutUM(o, key, val, global_timestamp);
 }
 
 // NOTE: shank: deleting will only update the UM, not the memtable.
 Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
-
+  std::cout << std::endl << ">> DBImpl::Delete" << std::endl;
   global_timestamp++;
 
   // get the entry corresponding to the key from the `um.memo_` map
@@ -1227,6 +1232,7 @@ Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
 }
 
 Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
+  std::cout << ">> DBImpl::Write" << std::endl;
   Writer w(&mutex_);
   w.batch = updates;
   w.sync = options.sync;
@@ -1262,13 +1268,14 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
       status = log_->AddRecord(WriteBatchInternal::Contents(write_batch));
       bool sync_error = false;
       if (status.ok() && options.sync) {
+        // TODO: shank: how to verify that the logfile_ contents are ok (as per
+        // our revised item structure)
         status = logfile_->Sync();
         if (!status.ok()) {
           sync_error = true;
         }
       }
       if (status.ok()) {
-        // TODO: this is where we should add the timestamp info
         status = WriteBatchInternal::InsertInto(write_batch, mem_);
       }
       mutex_.Lock();

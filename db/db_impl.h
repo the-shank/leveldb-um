@@ -46,6 +46,7 @@ class UpdateMemo {
   // 1. make it work
   // 2. make it beautiful
   // 3. make it fast
+  // TODO: shank: limit the UM size to be 4MB (i.e. 1 page)
   std::unordered_map<std::string, std::pair<uint64_t, uint64_t>> memo_;
 };
 
@@ -232,12 +233,12 @@ class DBImpl : public DB {
   CompactionStats stats_[config::kNumLevels] GUARDED_BY(mutex_);
 
   // update memo
-  // TODO: this should be guarded by A mutex as well...
+  // TODO: shank: this should be guarded by A mutex as well...
   // but i'm not sure which one
   UpdateMemo um;
 
   // global timestamp
-  // TODO: should this be guarded by a mutex, or atomic is fine?
+  // TODO: shank: should this be guarded by a mutex, or atomic is fine?
   std::atomic<uint64_t> global_timestamp;
 };
 

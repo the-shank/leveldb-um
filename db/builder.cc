@@ -8,12 +8,14 @@
 #include "db/filename.h"
 #include "db/table_cache.h"
 #include "db/version_edit.h"
+
 #include "leveldb/db.h"
 #include "leveldb/env.h"
 #include "leveldb/iterator.h"
 
 namespace leveldb {
 
+// TODO: shank: this should consider UM
 Status BuildTable(const std::string& dbname, Env* env, const Options& options,
                   TableCache* table_cache, Iterator* iter, FileMetaData* meta) {
   Status s;
