@@ -2,11 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include <sys/types.h>
-
 #include <atomic>
 #include <cstdio>
 #include <cstdlib>
+#include <sys/types.h>
 
 #include "leveldb/cache.h"
 #include "leveldb/comparator.h"
@@ -14,6 +13,7 @@
 #include "leveldb/env.h"
 #include "leveldb/filter_policy.h"
 #include "leveldb/write_batch.h"
+
 #include "port/port.h"
 #include "util/crc32c.h"
 #include "util/histogram.h"
@@ -577,17 +577,21 @@ class Benchmark {
       int num_threads = FLAGS_threads;
 
       if (name == Slice("open")) {
+        std::cout << ">> Benchmark::Run - open\n";
         method = &Benchmark::OpenBench;
         num_ /= 10000;
         if (num_ < 1) num_ = 1;
       } else if (name == Slice("fillseq")) {
+        std::cout << ">> Benchmark::Run - fillseq\n";
         fresh_db = true;
         method = &Benchmark::WriteSeq;
       } else if (name == Slice("fillbatch")) {
+        std::cout << ">> Benchmark::Run - fillbatch\n";
         fresh_db = true;
         entries_per_batch_ = 1000;
         method = &Benchmark::WriteSeq;
       } else if (name == Slice("fillrandom")) {
+        std::cout << ">> Benchmark::Run - fillrandom\n";
         fresh_db = true;
         method = &Benchmark::WriteRandom;
       } else if (name == Slice("overwrite")) {
@@ -709,6 +713,8 @@ class Benchmark {
 
   void RunBenchmark(int n, Slice name,
                     void (Benchmark::*method)(ThreadState*)) {
+    std::cout << ">> RunBenchmark:\n";
+    std::cout << ">>    name = " << name.ToString() << std::endl;
     SharedState shared(n);
 
     ThreadArg* arg = new ThreadArg[n];

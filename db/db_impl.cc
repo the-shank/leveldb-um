@@ -908,6 +908,7 @@ Status DBImpl::InstallCompactionResults(CompactionState* compact) {
 }
 
 Status DBImpl::DoCompactionWork(CompactionState* compact) {
+  // NOTE: shank: the actual compaction happens here
   const uint64_t start_micros = env_->NowMicros();
   int64_t imm_micros = 0;  // Micros spent doing imm_ compactions
 
@@ -976,6 +977,8 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
         last_sequence_for_key = kMaxSequenceNumber;
       }
 
+      // TODO: shank: we somehow need to refer to UM here :(
+      // and set drop=true for the obsolete entries
       if (last_sequence_for_key <= compact->smallest_snapshot) {
         // Hidden by an newer entry for same user key
         drop = true;  // (A)
@@ -1133,7 +1136,6 @@ int64_t DBImpl::TEST_MaxNextLevelOverlappingBytes() {
 // TODO: shank: uptate to use timestamp
 Status DBImpl::Get(const ReadOptions& options, const Slice& key,
                    std::string* value) {
-  
   std::cout << "DBImpl::Get" << std::endl;
 
   Status s;
@@ -1182,12 +1184,12 @@ Status DBImpl::Get(const ReadOptions& options, const Slice& key,
   std::string keystr{key.ToString()};
   // Check if key exists in the map
   if (um.memo_.count(keystr) > 0) {
-      // Update the existing pair
-      if (um.memo_[keystr].first > ts) {
-          // Invalidate the entry
-          s = Status::NotFound(Slice());
-      }
-  } 
+    // Update the existing pair
+    if (um.memo_[keystr].first > ts) {
+      // Invalidate the entry
+      s = Status::NotFound(Slice());
+    }
+  }
 
   if (have_stat_update && current->UpdateStats(stats)) {
     MaybeScheduleCompaction();
@@ -1247,12 +1249,12 @@ Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
 
   // Check if key exists in the map
   if (um.memo_.count(keystr) > 0) {
-      // Update the existing pair
-      um.memo_[keystr].second++;
-      um.memo_[keystr].first = global_timestamp;
+    // Update the existing pair
+    um.memo_[keystr].second++;
+    um.memo_[keystr].first = global_timestamp;
   } else {
-      // Insert a new pair if key doesn't exist
-      um.memo_[keystr] = std::make_pair((uint64_t)global_timestamp, 1);
+    // Insert a new pair if key doesn't exist
+    um.memo_[keystr] = std::make_pair((uint64_t)global_timestamp, 1);
   }
 
   um.print();
@@ -1565,12 +1567,12 @@ Status DBImpl::PutUM(const WriteOptions& opt, const Slice& key,
   std::string keystr{key.ToString()};
   // if the key is already present, update the timestamp and count
   if (um.memo_.count(keystr) > 0) {
-      // Update the existing pair
-      um.memo_[keystr].second++;
-      um.memo_[keystr].first = ts;
+    // Update the existing pair
+    um.memo_[keystr].second++;
+    um.memo_[keystr].first = ts;
   } else {
-      // Insert a new pair if key doesn't exist
-      um.memo_[keystr] = std::make_pair(ts, 0);
+    // Insert a new pair if key doesn't exist
+    um.memo_[keystr] = std::make_pair(ts, 0);
   }
 
   batch.Put(key, value, ts);
@@ -1669,6 +1671,5 @@ void UpdateMemo::print() {
               << kv.second.second << "\n";
   }
 }
-
 
 }  // namespace leveldb
