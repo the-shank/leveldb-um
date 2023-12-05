@@ -1,8 +1,11 @@
 default:
   just --list
 
-tmptest:
+interact:
   ./build.sh
   ./wrapper_build.sh
   rm -r -f ../test
-  ./wrapper ../test < input
+  ./wrapper ../test
+
+tmptest:
+  just interact < input

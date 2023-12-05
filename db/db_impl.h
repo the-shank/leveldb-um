@@ -44,12 +44,12 @@ class UpdateMemo {
 
   /* private: */
   // the backing hashmap (the actual memo data)
-  // mapping from key to (timestamp, count)
+  // mapping : (key -> (timestamp, count))
   // NOTE: using a pointer here might be more performant, but then, remember:
   // 1. make it work
   // 2. make it beautiful
   // 3. make it fast
-  // TODO: shank: limit the UM size to be 4MB (i.e. 1 page)
+  // TODO: shank: limit the UM size to be 4MB (i.e. 1 page) (#sid)
   std::unordered_map<std::string, std::pair<uint64_t, uint64_t>> memo_;
 };
 
