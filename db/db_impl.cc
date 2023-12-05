@@ -667,18 +667,26 @@ void DBImpl::RecordBackgroundError(const Status& s) {
 }
 
 void DBImpl::MaybeScheduleCompaction() {
-  std::cout << ">> DBImpl::MaybeScheduleCompaction()\n";
+  std::cout << ">> DBImpl::MaybeScheduleCompaction():\n";
   mutex_.AssertHeld();
   if (background_compaction_scheduled_) {
+    std::cout << ">> DBImpl::MaybeScheduleCompaction() - Already scheduled\n";
     // Already scheduled
   } else if (shutting_down_.load(std::memory_order_acquire)) {
+    std::cout << ">> DBImpl::MaybeScheduleCompaction() - DB is being deleted; "
+                 "no more background compactions\n";
     // DB is being deleted; no more background compactions
   } else if (!bg_error_.ok()) {
+    std::cout << ">> DBImpl::MaybeScheduleCompaction() - Already got an error; "
+                 "no more changes\n";
     // Already got an error; no more changes
   } else if (imm_ == nullptr && manual_compaction_ == nullptr &&
              !versions_->NeedsCompaction()) {
+    std::cout << ">> DBImpl::MaybeScheduleCompaction() - no work to be done\n";
     // No work to be done
   } else {
+    std::cout
+        << ">> DBImpl::MaybeScheduleCompaction() - scheduling DBImpl::BGWork\n";
     background_compaction_scheduled_ = true;
     env_->Schedule(&DBImpl::BGWork, this);
   }
