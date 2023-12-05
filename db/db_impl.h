@@ -41,7 +41,7 @@ class UpdateMemo {
 
   /* private: */
   // the backing hashmap (the actual memo data)
-  // mapping from key to (timestamp, count)
+  // mapping : (key -> (timestamp, count))
   // NOTE: using a pointer here might be more performant, but then, remember:
   // 1. make it work
   // 2. make it beautiful
