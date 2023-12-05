@@ -102,6 +102,9 @@ class DBImpl : public DB {
   // bytes.
   void RecordReadSample(Slice key);
 
+  // global timestamp
+  // TODO: shank: should this be guarded by a mutex, or atomic is fine?
+  static std::atomic<uint64_t> global_timestamp;
  private:
   friend class DB;
   struct CompactionState;
@@ -240,9 +243,6 @@ class DBImpl : public DB {
   // but i'm not sure which one
   UpdateMemo um;
 
-  // global timestamp
-  // TODO: shank: should this be guarded by a mutex, or atomic is fine?
-  std::atomic<uint64_t> global_timestamp;
 };
 
 // Sanitize db options.  The caller should delete result.info_log if

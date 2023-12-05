@@ -54,6 +54,8 @@ struct DBImpl::Writer {
   port::CondVar cv;
 };
 
+std::atomic<uint64_t> DBImpl::global_timestamp(0);
+
 struct DBImpl::CompactionState {
   // Files produced by compaction
   struct Output {
@@ -150,8 +152,9 @@ DBImpl::DBImpl(const Options& raw_options, const std::string& dbname)
       background_compaction_scheduled_(false),
       manual_compaction_(nullptr),
       versions_(new VersionSet(dbname_, &options_, table_cache_,
-                               &internal_comparator_)),
-      global_timestamp(0) {}
+                               &internal_comparator_))
+      // global_timestamp(0) 
+      {}
 
 DBImpl::~DBImpl() {
   // Wait for background work to finish.

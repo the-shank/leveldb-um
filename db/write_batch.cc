@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include "leveldb/db.h"
+#include "db/db_impl.h"
 
 #include "util/coding.h"
 
@@ -99,6 +100,7 @@ Status WriteBatch::IterateUM(Handler* handler) const {
     char tag = input[0];
     input.remove_prefix(1);
     switch (tag) {
+      std::cout << "WriteBatch::IterateUM: tag: " << tag << std::endl;
       case kTypeValue:
         if (GetLengthPrefixedSlice(&input, &key) &&
             GetLengthPrefixedSlice(&input, &value) && GetFixed64(&input, &ts)) {
@@ -151,6 +153,7 @@ void WriteBatch::Put(const Slice& key, const Slice& value) {
   rep_.push_back(static_cast<char>(kTypeValue));
   PutLengthPrefixedSlice(&rep_, key);
   PutLengthPrefixedSlice(&rep_, value);
+  PutFixed64(&rep_, DBImpl::global_timestamp++);
 }
 
 void WriteBatch::Put(const Slice& key, const Slice& value, const uint64_t ts) {

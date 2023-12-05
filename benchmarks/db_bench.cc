@@ -129,6 +129,8 @@ static const char* FLAGS_db = nullptr;
 // ZSTD compression level to try out
 static int FLAGS_zstd_compression_level = 1;
 
+static uint64_t timestamp = 0;
+
 namespace leveldb {
 
 namespace {
@@ -666,6 +668,8 @@ class Benchmark {
       }
 
       if (method != nullptr) {
+        std::cout << "Running " << name.ToString() << " with " << num_threads
+                  << " threads" << std::endl;
         RunBenchmark(num_threads, name, method);
       }
     }
@@ -852,10 +856,12 @@ class Benchmark {
       for (int j = 0; j < entries_per_batch_; j++) {
         const int k = seq ? i + j : thread->rand.Uniform(FLAGS_num);
         key.Set(k);
+        // batch.Put(key.slice(), gen.Generate(value_size_), timestamp++);
         batch.Put(key.slice(), gen.Generate(value_size_));
         bytes += value_size_ + key.slice().size();
         thread->stats.FinishedSingleOp();
       }
+
       s = db_->Write(write_options_, &batch);
       if (!s.ok()) {
         std::fprintf(stderr, "put error: %s\n", s.ToString().c_str());
