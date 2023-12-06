@@ -4,6 +4,9 @@
 
 #include "util/coding.h"
 
+#include "db/db_impl.h"
+#include <cstdint>
+
 namespace leveldb {
 
 void PutFixed32(std::string* dst, uint32_t value) {
@@ -69,9 +72,16 @@ void PutVarint64(std::string* dst, uint64_t v) {
   dst->append(buf, ptr - buf);
 }
 
-void PutLengthPrefixedSlice(std::string* dst, const Slice& value) {
-  PutVarint32(dst, value.size());
-  dst->append(value.data(), value.size());
+void PutLengthPrefixedSlice(std::string* dst, const Slice& value,
+                            bool with_ts = false) {
+  if (with_ts) {
+    PutVarint32(dst, value.size() + sizeof(uint64_t));
+    dst->append(value.data(), value.size());
+    PutFixed64(dst, DBImpl::global_timestamp++);
+  } else {
+    PutVarint32(dst, value.size());
+    dst->append(value.data(), value.size());
+  }
 }
 
 int VarintLength(uint64_t v) {
