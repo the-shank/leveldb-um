@@ -274,7 +274,9 @@ Status TableBuilder::Finish() {
       std::string handle_encoding;
       filter_block_handle.EncodeTo(&handle_encoding);
       // TODO: shank: how to get TS here? (#sid)
-      meta_index_block.Add(key, handle_encoding);
+      // Sid : Thinking is time stamp relevant here - this is some filter stuff
+      // and not the actual data, putting highest possible TS for now
+      meta_index_block.Add(key, handle_encoding, 0xffffffffffffffff);
     }
 
     // TODO(postrelease): Add stats and other meta blocks
@@ -288,7 +290,9 @@ Status TableBuilder::Finish() {
       std::string handle_encoding;
       r->pending_handle.EncodeTo(&handle_encoding);
       // TODO: shank: how to get TS here? (#sid)
-      r->index_block.Add(r->last_key, Slice(handle_encoding));
+      // Sid : Thinking is time stamp relevant here - this is some filter stuff
+      // and not the actual data, putting highest possible TS for now
+      r->index_block.Add(r->last_key, Slice(handle_encoding), 0xffffffffffffffff);
       r->pending_index_entry = false;
     }
     WriteBlock(&r->index_block, &index_block_handle);
