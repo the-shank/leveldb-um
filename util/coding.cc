@@ -73,7 +73,7 @@ void PutVarint64(std::string* dst, uint64_t v) {
 }
 
 void PutLengthPrefixedSlice(std::string* dst, const Slice& value,
-                            bool with_ts = false) {
+                            bool with_ts) {
   if (with_ts) {
     PutVarint32(dst, value.size() + sizeof(uint64_t));
     dst->append(value.data(), value.size());
