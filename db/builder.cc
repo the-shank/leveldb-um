@@ -37,6 +37,7 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
     for (; iter->Valid(); iter->Next()) {
       key = iter->key();
       value = iter->value();
+      // this is a MemTableIterator, so it does have ts() implementation
       ts = iter->ts();
       // builder->Add(key, iter->value());
       builder->Add(key, value, ts);

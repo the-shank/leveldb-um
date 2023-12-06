@@ -275,10 +275,21 @@ Status TableBuilder::Finish() {
       key.append(r->options.filter_policy->Name());
       std::string handle_encoding;
       filter_block_handle.EncodeTo(&handle_encoding);
+
       // TODO: shank: how to get TS here? (#sid)
       // Sid : Thinking is time stamp relevant here - this is some filter stuff
       // and not the actual data, putting highest possible TS for now
-      meta_index_block.Add(key, handle_encoding, 0xffffffffffffffff);
+      //
+      // meta_index_block.Add(key, handle_encoding, 0xffffffffffffffff);
+
+      // NOTE: shank:
+      // from the docs:
+      // A "metaindex" block. It contains one entry for every other meta block
+      // where the key is the name of the meta block and the value is a
+      // BlockHandle pointing to that meta block.
+      //
+      // so ts is not relevant here
+      meta_index_block.Add(key, handle_encoding);
     }
 
     // TODO(postrelease): Add stats and other meta blocks
@@ -294,11 +305,20 @@ Status TableBuilder::Finish() {
       // TODO: shank: how to get TS here? (#sid)
       // Sid : Thinking is time stamp relevant here - this is some filter stuff
       // and not the actual data, putting highest possible TS for now
-      r->index_block.Add(r->last_key, Slice(handle_encoding),
-                         0xffffffffffffffff);
+      //
+      // r->index_block.Add(r->last_key, Slice(handle_encoding),
+      //                    0xffffffffffffffff);
 
-      
-                         
+      // NOTE: shank:
+      // from the docs:
+      // An "index" block. This block contains one entry per data block, where
+      // the key is a string >= last key in that data block and before the first
+      // key in the successive data block. The value is the BlockHandle for the
+      // data block.
+      //
+      // so ts is not relevant here
+      r->index_block.Add(r->last_key, Slice(handle_encoding));
+
       r->pending_index_entry = false;
     }
     WriteBlock(&r->index_block, &index_block_handle);
