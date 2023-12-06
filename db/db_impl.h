@@ -5,16 +5,18 @@
 #ifndef STORAGE_LEVELDB_DB_DB_IMPL_H_
 #define STORAGE_LEVELDB_DB_DB_IMPL_H_
 
+#include "db/dbformat.h"
+#include "db/log_writer.h"
+#include "db/snapshot.h"
 #include <atomic>
 #include <deque>
 #include <set>
 #include <string>
+#include <unordered_map>
 
-#include "db/dbformat.h"
-#include "db/log_writer.h"
-#include "db/snapshot.h"
 #include "leveldb/db.h"
 #include "leveldb/env.h"
+
 #include "port/port.h"
 #include "port/thread_annotations.h"
 
@@ -25,6 +27,30 @@ class TableCache;
 class Version;
 class VersionEdit;
 class VersionSet;
+
+// the UpdateMemo class
+class UpdateMemo {
+ public:
+  UpdateMemo() = default;
+
+  UpdateMemo(const UpdateMemo&) = delete;
+  UpdateMemo& operator=(const UpdateMemo&) = delete;
+
+  size_t size() const { return memo_.size(); }
+
+  // print the memo state
+  void print();
+
+  /* private: */
+  // the backing hashmap (the actual memo data)
+  // mapping : (key -> (timestamp, count))
+  // NOTE: using a pointer here might be more performant, but then, remember:
+  // 1. make it work
+  // 2. make it beautiful
+  // 3. make it fast
+  // TODO: shank: limit the UM size to be 4MB (i.e. 1 page) (#sid)
+  std::unordered_map<std::string, std::pair<uint64_t, uint64_t>> memo_;
+};
 
 class DBImpl : public DB {
  public:
@@ -70,6 +96,10 @@ class DBImpl : public DB {
   // Samples are taken approximately once every config::kReadBytesPeriod
   // bytes.
   void RecordReadSample(Slice key);
+
+  // global timestamp
+  // TODO: shank: should this be guarded by a mutex, or atomic is fine?
+  static std::atomic<uint64_t> global_timestamp;
 
  private:
   friend class DB;
@@ -203,6 +233,11 @@ class DBImpl : public DB {
   Status bg_error_ GUARDED_BY(mutex_);
 
   CompactionStats stats_[config::kNumLevels] GUARDED_BY(mutex_);
+
+  // update memo
+  // TODO: shank: this should be guarded by A mutex as well...
+  // but i'm not sure which one
+  UpdateMemo um;
 };
 
 // Sanitize db options.  The caller should delete result.info_log if
