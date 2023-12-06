@@ -60,8 +60,9 @@ class EmptyIterator : public Iterator {
     return Slice();
   }
   uint64_t ts() const override {
-    std::cout << "[!] EmptyIterator::ts() called! (PLEASE INVESTIGATE)\n";
-    throw std::runtime_error("Not implemented");
+    //This function gets overridden so it doesn't matter what we put after the assert (always returns false)
+    assert(false);
+    return -1;
   }
   Status status() const override { return status_; }
 

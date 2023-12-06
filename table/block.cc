@@ -296,7 +296,7 @@ class Block::Iter : public Iterator {
       key_.resize(shared);
       key_.append(p, non_shared);
       value_ = Slice(p + non_shared, value_length);
-      //need to find ts here as well, added one line below (Hemant)
+      //Hemant: need to find ts here as well, added this one line below, unsure if it finds the right value
       ts_ = DecodeFixed64(p + non_shared + value_length);
       while (restart_index_ + 1 < num_restarts_ &&
              GetRestartPoint(restart_index_ + 1) < current_) {
