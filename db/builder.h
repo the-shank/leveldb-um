@@ -14,6 +14,7 @@ struct FileMetaData;
 
 class Env;
 class Iterator;
+class IteratorUM;
 class TableCache;
 class VersionEdit;
 
@@ -24,6 +25,9 @@ class VersionEdit;
 // zero, and no Table file will be produced.
 Status BuildTable(const std::string& dbname, Env* env, const Options& options,
                   TableCache* table_cache, Iterator* iter, FileMetaData* meta);
+Status BuildTableUM(const std::string& dbname, Env* env, const Options& options,
+                    TableCache* table_cache, IteratorUM* iter_um,
+                    FileMetaData* meta);
 
 }  // namespace leveldb
 

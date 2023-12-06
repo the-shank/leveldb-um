@@ -6,13 +6,13 @@
 
 #include "db/dbformat.h"
 #include <cstdint>
+#include <iostream>
 
 #include "leveldb/comparator.h"
 #include "leveldb/env.h"
 #include "leveldb/iterator.h"
 
 #include "util/coding.h"
-#include <iostream>
 
 using namespace std;
 
@@ -50,6 +50,43 @@ static const char* EncodeKey(std::string* scratch, const Slice& target) {
   return scratch->data();
 }
 
+class MemTableIteratorUM : public IteratorUM {
+ public:
+  explicit MemTableIteratorUM(MemTable::Table* table) : iter_(table) {}
+
+  MemTableIteratorUM(const MemTableIteratorUM&) = delete;
+  MemTableIteratorUM& operator=(const MemTableIteratorUM&) = delete;
+
+  ~MemTableIteratorUM() override = default;
+
+  bool Valid() const override { return iter_.Valid(); }
+  void Seek(const Slice& k) override { iter_.Seek(EncodeKey(&tmp_, k)); }
+  void SeekToFirst() override { iter_.SeekToFirst(); }
+  void SeekToLast() override { iter_.SeekToLast(); }
+  void Next() override { iter_.Next(); }
+  void Prev() override { iter_.Prev(); }
+  Slice key() const override { return GetLengthPrefixedSlice(iter_.key()); }
+  Slice value() const override {
+    Slice key_slice = GetLengthPrefixedSlice(iter_.key());
+    return GetLengthPrefixedSlice(key_slice.data() + key_slice.size());
+  }
+
+  uint64_t ts() const override {
+    Slice key_slice = GetLengthPrefixedSlice(iter_.key());
+    Slice value_slice =
+        GetLengthPrefixedSlice(key_slice.data() + key_slice.size());
+    uint64_t ts;
+    GetFixed64(&value_slice, &ts);
+    return ts;
+  }
+
+  Status status() const override { return Status::OK(); }
+
+ private:
+  MemTable::Table::Iterator iter_;
+  std::string tmp_;  // For passing to EncodeKey
+};
+
 class MemTableIterator : public Iterator {
  public:
   explicit MemTableIterator(MemTable::Table* table) : iter_(table) {}
@@ -79,6 +116,9 @@ class MemTableIterator : public Iterator {
 };
 
 Iterator* MemTable::NewIterator() { return new MemTableIterator(&table_); }
+IteratorUM* MemTable::NewIteratorUM() {
+  return new MemTableIteratorUM(&table_);
+}
 
 void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
                    const Slice& value) {
@@ -108,12 +148,12 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
   table_.Insert(buf);
 }
 
-void printHexDump(char *p, uint64_t len) {
-  std::ios_base::fmtflags f( cout.flags() );
+void printHexDump(char* p, uint64_t len) {
+  std::ios_base::fmtflags f(cout.flags());
   for (uint64_t i = 0; i < len; i++) {
     std::cout << std::hex << (int)p[i] << " ";
   }
-  cout.flags( f );
+  cout.flags(f);
   std::cout << std::endl;
 }
 
@@ -125,7 +165,7 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
   //  tag          : uint64((sequence << 8) | type)
   //  value_size   : varint32 of value.size()
   //  value bytes  : char[value.size()]
-  //  ts           : varint64
+  //  ts           : fixed int64
   std::cout << "MemTable::AddUM called" << std::endl;
 
   size_t key_size = key.size();
@@ -152,8 +192,6 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
   // printHexDump(buf, encoded_len);
   table_.Insert(buf);
 }
-
-
 
 bool MemTable::Get(const LookupKey& key, std::string* value, Status* s) {
   Slice memkey = key.memtable_key();
@@ -221,7 +259,8 @@ bool MemTable::Get(const LookupKey& key, std::string* value, Status* s,
           value->assign(v.data(), v.size());
           // decode the var 64 int here to ts
           uint32_t val_length;
-          const char* val_ptr = GetVarint32Ptr(key_ptr + key_length, key_ptr + key_length + 5, &val_length);
+          const char* val_ptr = GetVarint32Ptr(
+              key_ptr + key_length, key_ptr + key_length + 5, &val_length);
           *ts = DecodeFixed64(val_ptr + val_length);
           std::cout << std::endl << "Decoded ts: " << *ts << std::endl;
           std::cout << std::endl << "Decoded val: " << *value << std::endl;

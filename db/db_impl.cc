@@ -153,8 +153,8 @@ DBImpl::DBImpl(const Options& raw_options, const std::string& dbname)
       manual_compaction_(nullptr),
       versions_(new VersionSet(dbname_, &options_, table_cache_,
                                &internal_comparator_))
-      // global_timestamp(0) 
-      {}
+// global_timestamp(0)
+{}
 
 DBImpl::~DBImpl() {
   // Wait for background work to finish.
@@ -513,20 +513,22 @@ Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
 // TODO: shank: consider UM when writing to young-level
 Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
                                 Version* base) {
-  std::cout << ">> DBImpl::WriteLevel0Table\n";
+  std::cout << "\n>> DBImpl::WriteLevel0Table\n\n";
   mutex_.AssertHeld();
   const uint64_t start_micros = env_->NowMicros();
   FileMetaData meta;
   meta.number = versions_->NewFileNumber();
   pending_outputs_.insert(meta.number);
-  Iterator* iter = mem->NewIterator();
+  // Iterator* iter = mem->NewIterator();
+  IteratorUM* iter = mem->NewIteratorUM();
   Log(options_.info_log, "Level-0 table #%llu: started",
       (unsigned long long)meta.number);
 
   Status s;
   {
     mutex_.Unlock();
-    s = BuildTable(dbname_, env_, options_, table_cache_, iter, &meta);
+    // s = BuildTable(dbname_, env_, options_, table_cache_, iter, &meta);
+    s = BuildTableUM(dbname_, env_, options_, table_cache_, iter, &meta);
     mutex_.Lock();
   }
 
@@ -553,6 +555,9 @@ Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
   stats.micros = env_->NowMicros() - start_micros;
   stats.bytes_written = meta.file_size;
   stats_[level].Add(stats);
+
+  std::cout << "\n>> DBImpl::WriteLevel0Table ... done\n\n";
+
   return s;
 }
 

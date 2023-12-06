@@ -15,6 +15,8 @@
 #ifndef STORAGE_LEVELDB_INCLUDE_ITERATOR_H_
 #define STORAGE_LEVELDB_INCLUDE_ITERATOR_H_
 
+#include <iostream>
+
 #include "leveldb/export.h"
 #include "leveldb/slice.h"
 #include "leveldb/status.h"
@@ -69,6 +71,11 @@ class LEVELDB_EXPORT Iterator {
   // REQUIRES: Valid()
   virtual Slice value() const = 0;
 
+  // uint64_t ts() const {
+  //   std::cout << "\n>> [!] default ts() impl called! (PLEASE
+  //   INVESTIGATE)\n\n"; std::exit(1); return 0;
+  // };
+
   // If an error has occurred, return it.  Else return an ok status.
   virtual Status status() const = 0;
 
@@ -99,6 +106,11 @@ class LEVELDB_EXPORT Iterator {
     CleanupNode* next;
   };
   CleanupNode cleanup_head_;
+};
+
+class LEVELDB_EXPORT IteratorUM : public Iterator {
+ public:
+  virtual uint64_t ts() const = 0;
 };
 
 // Return an empty iterator (yields nothing).
