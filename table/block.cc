@@ -123,6 +123,8 @@ class Block::Iter : public Iterator {
     value_ = Slice(data_ + offset, 0);
 
     // TODO: shank: how to calcuate ts_ here (#sid)
+    // Hemant: I think we can just set ts_ to an arbitrary value as this function is always called just before parsing (key is cleared and value is empty)
+    ts_ = -1;
     // ts_ = ?
   }
 
