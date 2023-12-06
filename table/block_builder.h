@@ -26,7 +26,7 @@ class BlockBuilder {
 
   // REQUIRES: Finish() has not been called since the last call to Reset().
   // REQUIRES: key is larger than any previously added key
-  void Add(const Slice& key, const Slice& value);
+  // void Add(const Slice& key, const Slice& value);
   void Add(const Slice& key, const Slice& value, const uint64_t& ts);
 
   // Finish building the block and return a slice that refers to the

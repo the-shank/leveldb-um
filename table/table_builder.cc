@@ -5,6 +5,7 @@
 #include "leveldb/table_builder.h"
 
 #include <cassert>
+#include <iostream>
 
 #include "leveldb/comparator.h"
 #include "leveldb/env.h"
@@ -106,7 +107,9 @@ void TableBuilder::Add(const Slice& key, const Slice& value,
     r->options.comparator->FindShortestSeparator(&r->last_key, key);
     std::string handle_encoding;
     r->pending_handle.EncodeTo(&handle_encoding);
-    r->index_block.Add(r->last_key, Slice(handle_encoding));
+    // TODO: shank: how to add ts to index block?
+    // and what the hell is an index block?
+    r->index_block.Add(r->last_key, Slice(handle_encoding), ts);
     r->pending_index_entry = false;
   }
 
@@ -125,36 +128,36 @@ void TableBuilder::Add(const Slice& key, const Slice& value,
   }
 }
 
-void TableBuilder::Add(const Slice& key, const Slice& value) {
-  Rep* r = rep_;
-  assert(!r->closed);
-  if (!ok()) return;
-  if (r->num_entries > 0) {
-    assert(r->options.comparator->Compare(key, Slice(r->last_key)) > 0);
-  }
-
-  if (r->pending_index_entry) {
-    assert(r->data_block.empty());
-    r->options.comparator->FindShortestSeparator(&r->last_key, key);
-    std::string handle_encoding;
-    r->pending_handle.EncodeTo(&handle_encoding);
-    r->index_block.Add(r->last_key, Slice(handle_encoding));
-    r->pending_index_entry = false;
-  }
-
-  if (r->filter_block != nullptr) {
-    r->filter_block->AddKey(key);
-  }
-
-  r->last_key.assign(key.data(), key.size());
-  r->num_entries++;
-  r->data_block.Add(key, value);
-
-  const size_t estimated_block_size = r->data_block.CurrentSizeEstimate();
-  if (estimated_block_size >= r->options.block_size) {
-    Flush();
-  }
-}
+// void TableBuilder::Add(const Slice& key, const Slice& value) {
+//   Rep* r = rep_;
+//   assert(!r->closed);
+//   if (!ok()) return;
+//   if (r->num_entries > 0) {
+//     assert(r->options.comparator->Compare(key, Slice(r->last_key)) > 0);
+//   }
+//
+//   if (r->pending_index_entry) {
+//     assert(r->data_block.empty());
+//     r->options.comparator->FindShortestSeparator(&r->last_key, key);
+//     std::string handle_encoding;
+//     r->pending_handle.EncodeTo(&handle_encoding);
+//     r->index_block.Add(r->last_key, Slice(handle_encoding));
+//     r->pending_index_entry = false;
+//   }
+//
+//   if (r->filter_block != nullptr) {
+//     r->filter_block->AddKey(key);
+//   }
+//
+//   r->last_key.assign(key.data(), key.size());
+//   r->num_entries++;
+//   r->data_block.Add(key, value);
+//
+//   const size_t estimated_block_size = r->data_block.CurrentSizeEstimate();
+//   if (estimated_block_size >= r->options.block_size) {
+//     Flush();
+//   }
+// }
 
 void TableBuilder::Flush() {
   Rep* r = rep_;
@@ -184,6 +187,9 @@ void TableBuilder::WriteBlock(BlockBuilder* block, BlockHandle* handle) {
   Slice block_contents;
   CompressionType type = r->options.compression;
   // TODO(postrelease): Support more compression options: zlib?
+  std::cout << ">> TableBuilder::WriteBlock\n";
+  std::cout << ">> r->options.compression = " << r->options.compression << "\n";
+  // assert(type == kNoCompression);
   switch (type) {
     case kNoCompression:
       block_contents = raw;
@@ -267,6 +273,7 @@ Status TableBuilder::Finish() {
       key.append(r->options.filter_policy->Name());
       std::string handle_encoding;
       filter_block_handle.EncodeTo(&handle_encoding);
+      // TODO: shank: how to get TS here? (#sid)
       meta_index_block.Add(key, handle_encoding);
     }
 
@@ -280,6 +287,7 @@ Status TableBuilder::Finish() {
       r->options.comparator->FindShortSuccessor(&r->last_key);
       std::string handle_encoding;
       r->pending_handle.EncodeTo(&handle_encoding);
+      // TODO: shank: how to get TS here? (#sid)
       r->index_block.Add(r->last_key, Slice(handle_encoding));
       r->pending_index_entry = false;
     }
