@@ -59,6 +59,10 @@ class EmptyIterator : public Iterator {
     assert(false);
     return Slice();
   }
+  uint64_t ts() const override {
+    std::cout << "[!] EmptyIterator::ts() called! (PLEASE INVESTIGATE)\n";
+    throw std::runtime_error("Not implemented");
+  }
   Status status() const override { return status_; }
 
  private:

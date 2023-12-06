@@ -50,43 +50,6 @@ static const char* EncodeKey(std::string* scratch, const Slice& target) {
   return scratch->data();
 }
 
-class MemTableIteratorUM : public IteratorUM {
- public:
-  explicit MemTableIteratorUM(MemTable::Table* table) : iter_(table) {}
-
-  MemTableIteratorUM(const MemTableIteratorUM&) = delete;
-  MemTableIteratorUM& operator=(const MemTableIteratorUM&) = delete;
-
-  ~MemTableIteratorUM() override = default;
-
-  bool Valid() const override { return iter_.Valid(); }
-  void Seek(const Slice& k) override { iter_.Seek(EncodeKey(&tmp_, k)); }
-  void SeekToFirst() override { iter_.SeekToFirst(); }
-  void SeekToLast() override { iter_.SeekToLast(); }
-  void Next() override { iter_.Next(); }
-  void Prev() override { iter_.Prev(); }
-  Slice key() const override { return GetLengthPrefixedSlice(iter_.key()); }
-  Slice value() const override {
-    Slice key_slice = GetLengthPrefixedSlice(iter_.key());
-    return GetLengthPrefixedSlice(key_slice.data() + key_slice.size());
-  }
-
-  uint64_t ts() const override {
-    Slice key_slice = GetLengthPrefixedSlice(iter_.key());
-    Slice value_slice =
-        GetLengthPrefixedSlice(key_slice.data() + key_slice.size());
-    uint64_t ts;
-    GetFixed64(&value_slice, &ts);
-    return ts;
-  }
-
-  Status status() const override { return Status::OK(); }
-
- private:
-  MemTable::Table::Iterator iter_;
-  std::string tmp_;  // For passing to EncodeKey
-};
-
 class MemTableIterator : public Iterator {
  public:
   explicit MemTableIterator(MemTable::Table* table) : iter_(table) {}
@@ -107,6 +70,14 @@ class MemTableIterator : public Iterator {
     Slice key_slice = GetLengthPrefixedSlice(iter_.key());
     return GetLengthPrefixedSlice(key_slice.data() + key_slice.size());
   }
+  uint64_t ts() const override {
+    Slice key_slice = GetLengthPrefixedSlice(iter_.key());
+    Slice value_slice =
+        GetLengthPrefixedSlice(key_slice.data() + key_slice.size());
+    uint64_t ts;
+    GetFixed64(&value_slice, &ts);
+    return ts;
+  }
 
   Status status() const override { return Status::OK(); }
 
@@ -116,9 +87,6 @@ class MemTableIterator : public Iterator {
 };
 
 Iterator* MemTable::NewIterator() { return new MemTableIterator(&table_); }
-IteratorUM* MemTable::NewIteratorUM() {
-  return new MemTableIteratorUM(&table_);
-}
 
 void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
                    const Slice& value) {
@@ -166,7 +134,8 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
   //  value_size   : varint32 of value.size()
   //  value bytes  : char[value.size()]
   //  ts           : fixed int64
-  std::cout << "MemTable::AddUM called" << std::endl;
+
+  // std::cout << "MemTable::AddUM called" << std::endl;
 
   size_t key_size = key.size();
   size_t val_size = value.size();
@@ -185,8 +154,8 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
   std::memcpy(p, value.data(), val_size);
   /* assert(p + val_size == buf + encoded_len); */
   p += val_size;
-  std::cout << "Encoding val : " << value.data() << std::endl;
-  std::cout << "Encoding ts: " << ts << std::endl;
+  // std::cout << "Encoding val : " << value.data() << std::endl;
+  // std::cout << "Encoding ts: " << ts << std::endl;
   EncodeFixed64(p, ts);
   assert(p + ts_size == buf + encoded_len);
   // printHexDump(buf, encoded_len);

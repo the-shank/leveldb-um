@@ -7,8 +7,11 @@
 #include "db/db_impl.h"
 #include "db/dbformat.h"
 #include "db/filename.h"
+#include <cstdint>
+
 #include "leveldb/env.h"
 #include "leveldb/iterator.h"
+
 #include "port/port.h"
 #include "util/logging.h"
 #include "util/mutexlock.h"
@@ -68,6 +71,10 @@ class DBIter : public Iterator {
   Slice value() const override {
     assert(valid_);
     return (direction_ == kForward) ? iter_->value() : saved_value_;
+  }
+  uint64_t ts() const override {
+    std::cout << "[!] DBIter::ts() called! (PLEASE INVESTIGATE)\n";
+    throw std::runtime_error("Not implemented");
   }
   Status status() const override {
     if (status_.ok()) {

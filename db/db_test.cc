@@ -4,25 +4,27 @@
 
 #include "leveldb/db.h"
 
-#include <atomic>
-#include <cinttypes>
-#include <string>
-
-#include "gtest/gtest.h"
 #include "db/db_impl.h"
 #include "db/filename.h"
 #include "db/version_set.h"
 #include "db/write_batch_internal.h"
+#include <atomic>
+#include <cinttypes>
+#include <string>
+
 #include "leveldb/cache.h"
 #include "leveldb/env.h"
 #include "leveldb/filter_policy.h"
 #include "leveldb/table.h"
+
 #include "port/port.h"
 #include "port/thread_annotations.h"
 #include "util/hash.h"
 #include "util/logging.h"
 #include "util/mutexlock.h"
 #include "util/testutil.h"
+
+#include "gtest/gtest.h"
 
 namespace leveldb {
 
@@ -2152,7 +2154,8 @@ class ModelDB : public DB {
       void Put(const Slice& key, const Slice& value) override {
         (*map_)[key.ToString()] = value.ToString();
       }
-      void Put(const Slice& key, const Slice& value, const uint64_t ts) override {
+      void Put(const Slice& key, const Slice& value,
+               const uint64_t ts) override {
         // TODO: fix
         (*map_)[key.ToString()] = value.ToString();
       }
@@ -2197,6 +2200,9 @@ class ModelDB : public DB {
     void Prev() override { --iter_; }
     Slice key() const override { return iter_->first; }
     Slice value() const override { return iter_->second; }
+    uint64_t ts() const override {
+      throw std::runtime_error("Not implemented");
+    }
     Status status() const override { return Status::OK(); }
 
    private:

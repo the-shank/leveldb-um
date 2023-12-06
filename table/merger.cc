@@ -6,6 +6,7 @@
 
 #include "leveldb/comparator.h"
 #include "leveldb/iterator.h"
+
 #include "table/iterator_wrapper.h"
 
 namespace leveldb {
@@ -115,6 +116,13 @@ class MergingIterator : public Iterator {
   Slice value() const override {
     assert(Valid());
     return current_->value();
+  }
+
+  uint64_t ts() const override {
+    // std::cout << "[!] MergingIterator::ts() called! (PLEASE INVESTIGATE)\n";
+    // throw std::runtime_error("Not implemented");
+    assert(Valid());
+    return current_->ts();
   }
 
   Status status() const override {

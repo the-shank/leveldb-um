@@ -18,7 +18,6 @@ namespace leveldb {
 
 class InternalKeyComparator;
 class MemTableIterator;
-class MemTableIteratorUM;
 
 class MemTable {
  public:
@@ -52,7 +51,6 @@ class MemTable {
   // iterator are internal keys encoded by AppendInternalKey in the
   // db/format.{h,cc} module.
   Iterator* NewIterator();
-  IteratorUM* NewIteratorUM();
 
   // Add an entry into memtable that maps key to value at the
   // specified sequence number and with the specified type.

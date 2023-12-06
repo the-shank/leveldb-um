@@ -15,6 +15,7 @@
 
 #include "leveldb/write_batch.h"
 
+#include "db/db_impl.h"
 #include "db/dbformat.h"
 #include "db/memtable.h"
 #include "db/write_batch_internal.h"
@@ -22,7 +23,6 @@
 #include <iostream>
 
 #include "leveldb/db.h"
-#include "db/db_impl.h"
 
 #include "util/coding.h"
 
@@ -95,7 +95,8 @@ Status WriteBatch::IterateUM(Handler* handler) const {
   uint64_t ts;
   int found = 0;
   while (!input.empty()) {
-    std::cout << ">> WriteBatch::IterateUM: Looping : " << found << std::endl;
+    // std::cout << ">> WriteBatch::IterateUM: Looping : " << found <<
+    // std::endl;
     found++;
     char tag = input[0];
     input.remove_prefix(1);
@@ -105,7 +106,7 @@ Status WriteBatch::IterateUM(Handler* handler) const {
         if (GetLengthPrefixedSlice(&input, &key) &&
             GetLengthPrefixedSlice(&input, &value) && GetFixed64(&input, &ts)) {
           /* handler->Put(key, value); */
-          std::cout << ">> WriteBatch::IterateUM: Calling Put" << std::endl;
+          // std::cout << ">> WriteBatch::IterateUM: Calling Put" << std::endl;
           handler->Put(key, value, ts);
         } else {
           std::cout << ">> WriteBatch::IterateUM: Bad Put" << std::endl;
@@ -148,7 +149,7 @@ void WriteBatchInternal::SetSequence(WriteBatch* b, SequenceNumber seq) {
 }
 
 void WriteBatch::Put(const Slice& key, const Slice& value) {
-  std::cout << ">> WriteBatch::Put" << std::endl;
+  // std::cout << ">> WriteBatch::Put" << std::endl;
   WriteBatchInternal::SetCount(this, WriteBatchInternal::Count(this) + 1);
   rep_.push_back(static_cast<char>(kTypeValue));
   PutLengthPrefixedSlice(&rep_, key);
@@ -187,7 +188,7 @@ class MemTableInserter : public WriteBatch::Handler {
     sequence_++;
   }
   void Put(const Slice& key, const Slice& value, const uint64_t ts) override {
-    std::cout << "MemTableInserter::PutUM called" << std::endl;
+    // std::cout << "MemTableInserter::PutUM called" << std::endl;
     mem_->Add(sequence_, kTypeValue, key, value, ts);
     sequence_++;
   }

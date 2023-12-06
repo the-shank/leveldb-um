@@ -197,6 +197,11 @@ class Version::LevelFileNumIterator : public Iterator {
     EncodeFixed64(value_buf_ + 8, (*flist_)[index_]->file_size);
     return Slice(value_buf_, sizeof(value_buf_));
   }
+  uint64_t ts() const override {
+    std::cout
+        << "[!] LevelFileNumIterator::ts() called! (PLEASE INVESTIGATE)\n";
+    throw std::runtime_error("Not implemented");
+  }
   Status status() const override { return Status::OK(); }
 
  private:

@@ -43,6 +43,10 @@ class IteratorWrapper {
     assert(Valid());
     return iter_->value();
   }
+  uint64_t ts() const {
+    assert(Valid());
+    return iter_->ts();
+  }
   // Methods below require iter() != nullptr
   Status status() const {
     assert(iter_);

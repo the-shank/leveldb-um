@@ -5,6 +5,7 @@
 #include "table/two_level_iterator.h"
 
 #include "leveldb/table.h"
+
 #include "table/block.h"
 #include "table/format.h"
 #include "table/iterator_wrapper.h"
@@ -36,6 +37,12 @@ class TwoLevelIterator : public Iterator {
   Slice value() const override {
     assert(Valid());
     return data_iter_.value();
+  }
+  uint64_t ts() const override {
+    // std::cout << "TwoLevelIterator::ts() not implemented" << std::endl;
+    // throw std::runtime_error("Not implemented");
+    assert(Valid());
+    return data_iter_.ts();
   }
   Status status() const override {
     // It'd be nice if status() returned a const Status& instead of a Status

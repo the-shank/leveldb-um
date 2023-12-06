@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "leveldb/comparator.h"
+
 #include "table/format.h"
 #include "util/coding.h"
 #include "util/logging.h"
@@ -86,6 +87,7 @@ class Block::Iter : public Iterator {
   uint32_t restart_index_;  // Index of restart block in which current_ falls
   std::string key_;
   Slice value_;
+  uint64_t ts_;
   Status status_;
 
   inline int Compare(const Slice& a, const Slice& b) const {
@@ -107,9 +109,14 @@ class Block::Iter : public Iterator {
     restart_index_ = index;
     // current_ will be fixed by ParseNextKey();
 
+    // TODO: shank: discuss with #sid
+    //
     // ParseNextKey() starts at the end of value_, so set value_ accordingly
     uint32_t offset = GetRestartPoint(index);
     value_ = Slice(data_ + offset, 0);
+
+    // TODO: shank: how to calcuate ts_ here (#sid)
+    // ts_ = ?
   }
 
  public:
@@ -133,6 +140,13 @@ class Block::Iter : public Iterator {
   Slice value() const override {
     assert(Valid());
     return value_;
+  }
+
+  uint64_t ts() const override {
+    std::cout << "[!] Block::Iter::ts() called! (PLEASE INVESTIGATE)\n";
+    throw std::runtime_error("Not implemented");
+    // TODO: shank: resume here
+    assert(Valid());
   }
 
   void Next() override {
@@ -192,6 +206,7 @@ class Block::Iter : public Iterator {
           DecodeEntry(data_ + region_offset, data_ + restarts_, &shared,
                       &non_shared, &value_length);
       if (key_ptr == nullptr || (shared != 0)) {
+        std::cout << ">>>> 2\n";
         CorruptionError();
         return;
       }
@@ -262,6 +277,7 @@ class Block::Iter : public Iterator {
     uint32_t shared, non_shared, value_length;
     p = DecodeEntry(p, limit, &shared, &non_shared, &value_length);
     if (p == nullptr || key_.size() < shared) {
+      std::cout << ">>>> 1\n";
       CorruptionError();
       return false;
     } else {

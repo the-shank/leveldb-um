@@ -45,24 +45,43 @@
 //      sstables    -- Print sstable info
 //      heapprofile -- Dump a heap profile (if supported by this port)
 static const char* FLAGS_benchmarks =
-    "fillseq,"
-    "fillsync,"
+    // "fillseq,"
+    // "fillsync,"
     "fillrandom,"
-    "overwrite,"
-    "readrandom,"
-    "readrandom,"  // Extra run to allow previous compactions to quiesce
-    "readseq,"
-    "readreverse,"
-    "compact,"
-    "readrandom,"
-    "readseq,"
-    "readreverse,"
-    "fill100K,"
-    "crc32c,"
-    "snappycomp,"
-    "snappyuncomp,"
-    "zstdcomp,"
+    // "overwrite,"
+    // "readrandom,"
+    // "readrandom,"  // Extra run to allow previous compactions to quiesce
+    // "readseq,"
+    // "readreverse,"
+    // "compact,"
+    // "readrandom,"
+    // "readseq,"
+    // "readreverse,"
+    // "fill100K,"
+    // "crc32c,"
+    // "snappycomp,"
+    // "snappyuncomp,"
+    // "zstdcomp,"
     "zstduncomp,";
+// static const char* FLAGS_benchmarks =
+//     "fillseq,"
+//     "fillsync,"
+//     "fillrandom,"
+//     "overwrite,"
+//     "readrandom,"
+//     "readrandom,"  // Extra run to allow previous compactions to quiesce
+//     "readseq,"
+//     "readreverse,"
+//     "compact,"
+//     "readrandom,"
+//     "readseq,"
+//     "readreverse,"
+//     "fill100K,"
+//     "crc32c,"
+//     "snappycomp,"
+//     "snappyuncomp,"
+//     "zstdcomp,"
+//     "zstduncomp,";
 
 // Number of key/values to place in database
 static int FLAGS_num = 1000000;

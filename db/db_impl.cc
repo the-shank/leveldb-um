@@ -513,22 +513,20 @@ Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
 // TODO: shank: consider UM when writing to young-level
 Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
                                 Version* base) {
-  std::cout << "\n>> DBImpl::WriteLevel0Table\n\n";
+  std::cout << ">> DBImpl::WriteLevel0Table\n";
   mutex_.AssertHeld();
   const uint64_t start_micros = env_->NowMicros();
   FileMetaData meta;
   meta.number = versions_->NewFileNumber();
   pending_outputs_.insert(meta.number);
-  // Iterator* iter = mem->NewIterator();
-  IteratorUM* iter = mem->NewIteratorUM();
+  Iterator* iter = mem->NewIterator();
   Log(options_.info_log, "Level-0 table #%llu: started",
       (unsigned long long)meta.number);
 
   Status s;
   {
     mutex_.Unlock();
-    // s = BuildTable(dbname_, env_, options_, table_cache_, iter, &meta);
-    s = BuildTableUM(dbname_, env_, options_, table_cache_, iter, &meta);
+    s = BuildTable(dbname_, env_, options_, table_cache_, iter, &meta);
     mutex_.Lock();
   }
 
@@ -556,12 +554,13 @@ Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
   stats.bytes_written = meta.file_size;
   stats_[level].Add(stats);
 
-  std::cout << "\n>> DBImpl::WriteLevel0Table ... done\n\n";
+  std::cout << ">> DBImpl::WriteLevel0Table ... done\n";
 
   return s;
 }
 
 void DBImpl::CompactMemTable() {
+  std::cout << ">> DBImpl::CompactMemTable()\n";
   mutex_.AssertHeld();
   assert(imm_ != nullptr);
 
@@ -592,6 +591,7 @@ void DBImpl::CompactMemTable() {
   } else {
     RecordBackgroundError(s);
   }
+  std::cout << ">> DBImpl::CompactMemTable() ... done\n";
 }
 
 void DBImpl::CompactRange(const Slice* begin, const Slice* end) {
@@ -701,7 +701,9 @@ void DBImpl::MaybeScheduleCompaction() {
 }
 
 void DBImpl::BGWork(void* db) {
+  std::cout << "\n>> DBImpl::BGWork() - started\n";
   reinterpret_cast<DBImpl*>(db)->BackgroundCall();
+  std::cout << ">> DBImpl::BGWork() - finished\n\n";
 }
 
 void DBImpl::BackgroundCall() {
@@ -729,7 +731,9 @@ void DBImpl::BackgroundCompaction() {
   mutex_.AssertHeld();
 
   if (imm_ != nullptr) {
+    std::cout << ">> DBImpl::BackgroundCompaction() - CompactMemTable()\n";
     CompactMemTable();
+    std::cout << ">> DBImpl::BackgroundCompaction() - CompactMemTable() done\n";
     return;
   }
 
@@ -773,7 +777,9 @@ void DBImpl::BackgroundCompaction() {
         status.ToString().c_str(), versions_->LevelSummary(&tmp));
   } else {
     CompactionState* compact = new CompactionState(c);
+    std::cout << ">> DBImpl::BackgroundCompaction() - DoCompactionWork\n";
     status = DoCompactionWork(compact);
+    std::cout << ">> DBImpl::BackgroundCompaction() - DoCompactionWork done\n";
     if (!status.ok()) {
       RecordBackgroundError(status);
     }
@@ -934,6 +940,8 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
     compact->smallest_snapshot = snapshots_.oldest()->sequence_number();
   }
 
+  // TODO: shank: the input iterator should really be a IteratorUM, so that we
+  // can get the ts
   Iterator* input = versions_->MakeInputIterator(compact->compaction);
 
   // Release mutex while we're actually doing the compaction work
@@ -971,6 +979,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
     // Handle key/value, add to state, etc.
     bool drop = false;
     if (!ParseInternalKey(key, &ikey)) {
+      std::cout << ">> DBImpl::DoCompactionWork() - ParseInternalKey failed\n";
       // Do not hide error keys
       current_user_key.clear();
       has_current_user_key = false;
@@ -1016,10 +1025,13 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
 #endif
 
     if (!drop) {
+      std::cout << ">> DBImpl::DoCompactionWork() - drop=false\n";
       // Open output file if necessary
       if (compact->builder == nullptr) {
         status = OpenCompactionOutputFile(compact);
         if (!status.ok()) {
+          std::cout << ">> DBImpl::DoCompactionWork() - "
+                       "OpenCompactionOutputFile failed\n";
           break;
         }
       }
@@ -1027,18 +1039,23 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
         compact->current_output()->smallest.DecodeFrom(key);
       }
       compact->current_output()->largest.DecodeFrom(key);
-      compact->builder->Add(key, input->value());
+      // TODO: shank: somehow need to get the ts here as well (#sid)
+      // compact->builder->Add(key, input->value());
+      compact->builder->Add(key, input->value(), input->ts());
 
       // Close output file if it is big enough
       if (compact->builder->FileSize() >=
           compact->compaction->MaxOutputFileSize()) {
         status = FinishCompactionOutputFile(compact, input);
         if (!status.ok()) {
+          std::cout << ">> DBImpl::DoCompactionWork() - "
+                       "FinishCompactionOutputFile failed\n";
           break;
         }
       }
     }
 
+    std::cout << ">> DBImpl::DoCompactionWork() - input->Next()\n";
     input->Next();
   }
 
@@ -1272,7 +1289,7 @@ Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
 }
 
 Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
-  std::cout << ">> DBImpl::Write" << std::endl;
+  // std::cout << ">> DBImpl::Write" << std::endl;
   Writer w(&mutex_);
   w.batch = updates;
   w.sync = options.sync;
@@ -1295,7 +1312,7 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
     WriteBatch* write_batch = BuildBatchGroup(&last_writer);
     WriteBatchInternal::SetSequence(write_batch, last_sequence + 1);
     last_sequence += WriteBatchInternal::Count(write_batch);
-    std::cout << "Write:LastSequence: " << last_sequence << "\n";
+    // std::cout << "Write:LastSequence: " << last_sequence << "\n";
 
     // Add to log and apply to memtable.  We can release the lock
     // during this phase since &w is currently responsible for logging
