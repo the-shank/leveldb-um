@@ -56,7 +56,9 @@ Block::~Block() {
 //
 // If any errors are detected, returns nullptr.  Otherwise, returns a
 // pointer to the key delta (just past the three decoded values).
-// TODO: shank: kinda lost what to do here (#sid)
+// TODO: shank: kinda lost what to do here (#sid) 
+// Hemant: this func only decodes the shared, non shared and value length values 
+// so we don't need to add anything for timestamp
 static inline const char* DecodeEntry(const char* p, const char* limit,
                                       uint32_t* shared, uint32_t* non_shared,
                                       uint32_t* value_length) {
@@ -148,12 +150,13 @@ class Block::Iter : public Iterator {
   }
 
   uint64_t ts() const override {
+    //Added by Hemant, haven't checked if it works
     assert(Valid());
-    std::cout << "[!] Block::Iter::ts() called! (PLEASE INVESTIGATE)\n";
+    return ts_;
+    /*std::cout << "[!] Block::Iter::ts() called! (PLEASE INVESTIGATE)\n";
     std::cout << boost::stacktrace::stacktrace();
-    throw std::runtime_error("Not implemented");
+    throw std::runtime_error("Not implemented");*/
     // TODO: shank: resume here
-    // assert(Valid());
   }
 
   void Next() override {
