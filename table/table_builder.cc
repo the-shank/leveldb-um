@@ -187,7 +187,7 @@ void TableBuilder::WriteBlock(BlockBuilder* block, BlockHandle* handle) {
   Slice block_contents;
   CompressionType type = r->options.compression;
   // TODO(postrelease): Support more compression options: zlib?
-  std::cout << ">> TableBuilder::WriteBlock\n";
+  // std::cout << ">> TableBuilder::WriteBlock\n";
   // std::cout << ">> r->options.compression = " << r->options.compression <<
   // "\n"; assert(type == kNoCompression);
   switch (type) {

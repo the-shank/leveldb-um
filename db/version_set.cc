@@ -1239,19 +1239,31 @@ Iterator* VersionSet::MakeInputIterator(Compaction* c) {
       if (c->level() + which == 0) {
         const std::vector<FileMetaData*>& files = c->inputs_[which];
         for (size_t i = 0; i < files.size(); i++) {
+          std::cout << ">> VersionSet::MakeInputIterator() - creating "
+                       "table_cache_->NewIterator()\n";
           list[num++] = table_cache_->NewIterator(options, files[i]->number,
                                                   files[i]->file_size);
+          std::cout << ">> VersionSet::MakeInputIterator() - creating "
+                       "table_cache_->NewIterator() done\n";
         }
       } else {
         // Create concatenating iterator for the files from this level
+        std::cout << ">> VersionSet::MakeInputIterator() - creating "
+                     "NewTwoLevelIterator()\n";
         list[num++] = NewTwoLevelIterator(
             new Version::LevelFileNumIterator(icmp_, &c->inputs_[which]),
             &GetFileIterator, table_cache_, options);
+        std::cout << ">> VersionSet::MakeInputIterator() - creating "
+                     "NewTwoLevelIterator() done\n";
       }
     }
   }
   assert(num <= space);
+  std::cout << ">> VersionSet::MakeInputIterator() - creating "
+               "NewMergingIterator()\n";
   Iterator* result = NewMergingIterator(&icmp_, list, num);
+  std::cout << ">> VersionSet::MakeInputIterator() - creating "
+               "NewMergingIterator() done\n";
   delete[] list;
   return result;
 }

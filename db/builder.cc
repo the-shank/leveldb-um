@@ -47,6 +47,8 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
     }
 
     // Finish and check for builder errors
+    // NOTE: shank: finish() is where the meta and index blocks are written out
+    // the data blocks should have already been written out above
     s = builder->Finish();
     if (s.ok()) {
       meta->file_size = builder->FileSize();
@@ -69,6 +71,8 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
       Iterator* it = table_cache->NewIterator(ReadOptions(), meta->number,
                                               meta->file_size);
       s = it->status();
+      // NOTE: shank: not rleated to our project but I think they are missing
+      // the check for s here...
       delete it;
     }
   }

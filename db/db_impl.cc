@@ -589,6 +589,7 @@ void DBImpl::CompactMemTable() {
     has_imm_.store(false, std::memory_order_release);
     RemoveObsoleteFiles();
   } else {
+    std::cout << ">> DBImpl::CompactMemTable() - RecordBackgroundError\n";
     RecordBackgroundError(s);
   }
   std::cout << ">> DBImpl::CompactMemTable() ... done\n";
@@ -955,9 +956,15 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
   std::string current_user_key;
   bool has_current_user_key = false;
   SequenceNumber last_sequence_for_key = kMaxSequenceNumber;
+
+  // NOTE: shank: added this to debug
+  assert(input->Valid());
+
   while (input->Valid() && !shutting_down_.load(std::memory_order_acquire)) {
     // Prioritize immutable compaction work
     if (has_imm_.load(std::memory_order_relaxed)) {
+      std::cout << ">> DBImpl::DoCompactionWork() - has_imm=true => doing "
+                   "immutable compaction work\n";
       const uint64_t imm_start = env_->NowMicros();
       mutex_.Lock();
       if (imm_ != nullptr) {
@@ -967,12 +974,18 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
       }
       mutex_.Unlock();
       imm_micros += (env_->NowMicros() - imm_start);
+      std::cout << ">> DBImpl::DoCompactionWork() - has_imm=true => doing "
+                   "immutable compaction work => done\n";
     }
 
     Slice key = input->key();
     if (compact->compaction->ShouldStopBefore(key) &&
         compact->builder != nullptr) {
+      std::cout << ">> DBImpl::DoCompactionWork() - "
+                   "FinishCompactionOutputFile()\n";
       status = FinishCompactionOutputFile(compact, input);
+      std::cout << ">> DBImpl::DoCompactionWork() - "
+                   "FinishCompactionOutputFile() => done\n";
       if (!status.ok()) {
         break;
       }
@@ -1025,6 +1038,8 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
         compact->compaction->IsBaseLevelForKey(ikey.user_key),
         (int)last_sequence_for_key, (int)compact->smallest_snapshot);
 #endif
+
+    std::cout << ">> DBImpl::DoCompactionWork() - drop=" << drop << "\n";
 
     if (!drop) {
       std::cout << ">> DBImpl::DoCompactionWork() - drop=false\n";

@@ -56,8 +56,8 @@ Block::~Block() {
 //
 // If any errors are detected, returns nullptr.  Otherwise, returns a
 // pointer to the key delta (just past the three decoded values).
-// TODO: shank: kinda lost what to do here (#sid) 
-// Hemant: this func only decodes the shared, non shared and value length values 
+// TODO: shank: kinda lost what to do here (#sid)
+// Hemant: this func only decodes the shared, non shared and value length values
 // so we don't need to add anything for timestamp
 static inline const char* DecodeEntry(const char* p, const char* limit,
                                       uint32_t* shared, uint32_t* non_shared,
@@ -102,8 +102,8 @@ class Block::Iter : public Iterator {
 
   // Return the offset in data_ just past the end of the current entry.
   inline uint32_t NextEntryOffset() const {
-    // return (value_.data() + value_.size()) - data_;
-    return (value_.data() + value_.size() + sizeof(uint64_t)) - data_;
+    return (value_.data() + value_.size()) - data_;
+    // return (value_.data() + value_.size() + sizeof(uint64_t)) - data_;
   }
 
   uint32_t GetRestartPoint(uint32_t index) {
@@ -123,7 +123,9 @@ class Block::Iter : public Iterator {
     value_ = Slice(data_ + offset, 0);
 
     // TODO: shank: how to calcuate ts_ here (#sid)
-    // Hemant: I think we can just set ts_ to an arbitrary value as this function is always called just before parsing (key is cleared and value is empty)
+    // Hemant: I think we can just set ts_ to an arbitrary value as this
+    // function is always called just before parsing (key is cleared and value
+    // is empty)
     ts_ = -1;
     // ts_ = ?
   }
@@ -152,7 +154,7 @@ class Block::Iter : public Iterator {
   }
 
   uint64_t ts() const override {
-    //Added by Hemant, haven't checked if it works
+    // Added by Hemant, haven't checked if it works
     assert(Valid());
     return ts_;
     /*std::cout << "[!] Block::Iter::ts() called! (PLEASE INVESTIGATE)\n";
@@ -218,7 +220,7 @@ class Block::Iter : public Iterator {
           DecodeEntry(data_ + region_offset, data_ + restarts_, &shared,
                       &non_shared, &value_length);
       if (key_ptr == nullptr || (shared != 0)) {
-        std::cout << ">>>> 2\n";
+        std::cout << ">>>> Block::Iter::Seek - corruption error\n";
         CorruptionError();
         return;
       }
@@ -289,19 +291,21 @@ class Block::Iter : public Iterator {
     uint32_t shared, non_shared, value_length;
     p = DecodeEntry(p, limit, &shared, &non_shared, &value_length);
     if (p == nullptr || key_.size() < shared) {
-      std::cout << ">>>> 1\n";
+      std::cout << ">>>> Block::Iter::ParseNextKey - corruption error\n";
       CorruptionError();
       return false;
     } else {
       key_.resize(shared);
       key_.append(p, non_shared);
       value_ = Slice(p + non_shared, value_length);
-      //Hemant: need to find ts here as well, added this one line below, unsure if it finds the right value
+      // Hemant: need to find ts here as well, added this one line below, unsure
+      // if it finds the right value
       ts_ = DecodeFixed64(p + non_shared + value_length);
       while (restart_index_ + 1 < num_restarts_ &&
              GetRestartPoint(restart_index_ + 1) < current_) {
         ++restart_index_;
       }
+      std::cout << ">>>> Block::Iter::ParseNextKey - success\n";
       return true;
     }
   }
