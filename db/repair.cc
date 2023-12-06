@@ -308,7 +308,7 @@ class Repairer {
     Iterator* iter = NewTableIterator(t.meta);
     int counter = 0;
     for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
-      builder->Add(iter->key(), iter->value());
+      builder->Add(iter->key(), iter->value(), iter->ts());
       counter++;
     }
     delete iter;
