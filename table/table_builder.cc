@@ -188,8 +188,8 @@ void TableBuilder::WriteBlock(BlockBuilder* block, BlockHandle* handle) {
   CompressionType type = r->options.compression;
   // TODO(postrelease): Support more compression options: zlib?
   std::cout << ">> TableBuilder::WriteBlock\n";
-  std::cout << ">> r->options.compression = " << r->options.compression << "\n";
-  // assert(type == kNoCompression);
+  // std::cout << ">> r->options.compression = " << r->options.compression <<
+  // "\n"; assert(type == kNoCompression);
   switch (type) {
     case kNoCompression:
       block_contents = raw;
@@ -199,8 +199,10 @@ void TableBuilder::WriteBlock(BlockBuilder* block, BlockHandle* handle) {
       std::string* compressed = &r->compressed_output;
       if (port::Snappy_Compress(raw.data(), raw.size(), compressed) &&
           compressed->size() < raw.size() - (raw.size() / 8u)) {
+        // std::cout << ">> Snappy_Compress\n";
         block_contents = *compressed;
       } else {
+        // std::cout << ">> Snappy_Compress not supported\n";
         // Snappy not supported, or compressed less than 12.5%, so just
         // store uncompressed form
         block_contents = raw;
@@ -292,7 +294,11 @@ Status TableBuilder::Finish() {
       // TODO: shank: how to get TS here? (#sid)
       // Sid : Thinking is time stamp relevant here - this is some filter stuff
       // and not the actual data, putting highest possible TS for now
-      r->index_block.Add(r->last_key, Slice(handle_encoding), 0xffffffffffffffff);
+      r->index_block.Add(r->last_key, Slice(handle_encoding),
+                         0xffffffffffffffff);
+
+      
+                         
       r->pending_index_entry = false;
     }
     WriteBlock(&r->index_block, &index_block_handle);

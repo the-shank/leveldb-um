@@ -187,7 +187,8 @@ class BlockConstructor : public Constructor {
     BlockBuilder builder(&options);
 
     for (const auto& kvp : data) {
-      builder.Add(kvp.first, kvp.second);
+      // NOTE: shank: dont care about tests for now...
+      builder.Add(kvp.first, kvp.second, 0xffffffffffffffff);
     }
     // Open the block
     data_ = builder.Finish().ToString();
@@ -221,7 +222,8 @@ class TableConstructor : public Constructor {
     TableBuilder builder(options, &sink);
 
     for (const auto& kvp : data) {
-      builder.Add(kvp.first, kvp.second);
+      // NOTE: shank: dont care about tests for now...
+      builder.Add(kvp.first, kvp.second, 0xffffffffffffffff);
       EXPECT_LEVELDB_OK(builder.status());
     }
     Status s = builder.Finish();
