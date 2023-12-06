@@ -56,7 +56,9 @@ Block::~Block() {
 //
 // If any errors are detected, returns nullptr.  Otherwise, returns a
 // pointer to the key delta (just past the three decoded values).
-// TODO: shank: kinda lost what to do here (#sid)
+// TODO: shank: kinda lost what to do here (#sid) 
+// Hemant: this func only decodes the shared, non shared and value length values 
+// so we don't need to add anything for timestamp
 static inline const char* DecodeEntry(const char* p, const char* limit,
                                       uint32_t* shared, uint32_t* non_shared,
                                       uint32_t* value_length) {
@@ -121,6 +123,8 @@ class Block::Iter : public Iterator {
     value_ = Slice(data_ + offset, 0);
 
     // TODO: shank: how to calcuate ts_ here (#sid)
+    // Hemant: I think we can just set ts_ to an arbitrary value as this function is always called just before parsing (key is cleared and value is empty)
+    ts_ = -1;
     // ts_ = ?
   }
 
@@ -148,11 +152,13 @@ class Block::Iter : public Iterator {
   }
 
   uint64_t ts() const override {
-    std::cout << "[!] Block::Iter::ts() called! (PLEASE INVESTIGATE)\n";
+    //Added by Hemant, haven't checked if it works
+    assert(Valid());
+    return ts_;
+    /*std::cout << "[!] Block::Iter::ts() called! (PLEASE INVESTIGATE)\n";
     std::cout << boost::stacktrace::stacktrace();
-    throw std::runtime_error("Not implemented");
+    throw std::runtime_error("Not implemented");*/
     // TODO: shank: resume here
-    // assert(Valid());
   }
 
   void Next() override {
@@ -290,6 +296,8 @@ class Block::Iter : public Iterator {
       key_.resize(shared);
       key_.append(p, non_shared);
       value_ = Slice(p + non_shared, value_length);
+      //Hemant: need to find ts here as well, added this one line below, unsure if it finds the right value
+      ts_ = DecodeFixed64(p + non_shared + value_length);
       while (restart_index_ + 1 < num_restarts_ &&
              GetRestartPoint(restart_index_ + 1) < current_) {
         ++restart_index_;
