@@ -7,6 +7,9 @@
 #include "table/block.h"
 
 #include <algorithm>
+#include <boost/exception/all.hpp>
+#include <boost/stacktrace.hpp>
+#include <boost/stacktrace/stacktrace_fwd.hpp>
 #include <cstdint>
 #include <vector>
 
@@ -53,6 +56,7 @@ Block::~Block() {
 //
 // If any errors are detected, returns nullptr.  Otherwise, returns a
 // pointer to the key delta (just past the three decoded values).
+// TODO: shank: kinda lost what to do here (#sid)
 static inline const char* DecodeEntry(const char* p, const char* limit,
                                       uint32_t* shared, uint32_t* non_shared,
                                       uint32_t* value_length) {
@@ -96,7 +100,8 @@ class Block::Iter : public Iterator {
 
   // Return the offset in data_ just past the end of the current entry.
   inline uint32_t NextEntryOffset() const {
-    return (value_.data() + value_.size()) - data_;
+    // return (value_.data() + value_.size()) - data_;
+    return (value_.data() + value_.size() + sizeof(uint64_t)) - data_;
   }
 
   uint32_t GetRestartPoint(uint32_t index) {
@@ -144,9 +149,10 @@ class Block::Iter : public Iterator {
 
   uint64_t ts() const override {
     std::cout << "[!] Block::Iter::ts() called! (PLEASE INVESTIGATE)\n";
+    std::cout << boost::stacktrace::stacktrace();
     throw std::runtime_error("Not implemented");
     // TODO: shank: resume here
-    assert(Valid());
+    // assert(Valid());
   }
 
   void Next() override {
@@ -294,6 +300,7 @@ class Block::Iter : public Iterator {
 };
 
 Iterator* Block::NewIterator(const Comparator* comparator) {
+  std::cout << ">> Block::NewIterator\n";
   if (size_ < sizeof(uint32_t)) {
     return NewErrorIterator(Status::Corruption("bad block contents"));
   }

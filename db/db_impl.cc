@@ -942,7 +942,9 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
 
   // TODO: shank: the input iterator should really be a IteratorUM, so that we
   // can get the ts
+  std::cout << ">> DBImpl::DoCompactionWork() - MakeInputIterator\n";
   Iterator* input = versions_->MakeInputIterator(compact->compaction);
+  std::cout << ">> DBImpl::DoCompactionWork() - MakeInputIterator done\n";
 
   // Release mutex while we're actually doing the compaction work
   mutex_.Unlock();

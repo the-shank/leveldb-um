@@ -27,7 +27,15 @@ class MergingIterator : public Iterator {
 
   ~MergingIterator() override { delete[] children_; }
 
-  bool Valid() const override { return (current_ != nullptr); }
+  bool Valid() const override {
+    if (current_ != nullptr) {
+      std::cout << "[+] MergingIterator::Valid() - true\n";
+    } else {
+      std::cout
+          << "[!] MergingIterator::Valid() - false! (PLEASE INVESTIGATE)\n";
+    }
+    return (current_ != nullptr);
+  }
 
   void SeekToFirst() override {
     for (int i = 0; i < n_; i++) {
@@ -122,6 +130,9 @@ class MergingIterator : public Iterator {
     // std::cout << "[!] MergingIterator::ts() called! (PLEASE INVESTIGATE)\n";
     // throw std::runtime_error("Not implemented");
     assert(Valid());
+    std::cout << "[+] MergingIterator::ts() - valid() is ok\n";
+    std::cout << "[+] MergingIterator::ts() - current_->ts() = "
+              << current_->ts() << "\n";
     return current_->ts();
   }
 
