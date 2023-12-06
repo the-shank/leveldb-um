@@ -148,6 +148,7 @@ class Block::Iter : public Iterator {
   }
 
   uint64_t ts() const override {
+    assert(Valid());
     std::cout << "[!] Block::Iter::ts() called! (PLEASE INVESTIGATE)\n";
     std::cout << boost::stacktrace::stacktrace();
     throw std::runtime_error("Not implemented");
@@ -290,6 +291,8 @@ class Block::Iter : public Iterator {
       key_.resize(shared);
       key_.append(p, non_shared);
       value_ = Slice(p + non_shared, value_length);
+      //need to find ts here as well, added one line below (Hemant)
+      ts_ = DecodeFixed64(p + non_shared + value_length);
       while (restart_index_ + 1 < num_restarts_ &&
              GetRestartPoint(restart_index_ + 1) < current_) {
         ++restart_index_;
