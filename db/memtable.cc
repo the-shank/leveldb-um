@@ -6,6 +6,7 @@
 
 #include "db/db_impl.h"
 #include "db/dbformat.h"
+#include <iostream>
 
 #include "leveldb/comparator.h"
 #include "leveldb/env.h"
@@ -104,6 +105,8 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
 }
 
 bool MemTable::Get(const LookupKey& key, std::string* value, Status* s) {
+  std::cout << ">> MemTable::Get - key:" << key.user_key().ToString() << "\n";
+
   Slice memkey = key.memtable_key();
   Table::Iterator iter(&table_);
   iter.Seek(memkey.data());
@@ -127,23 +130,8 @@ bool MemTable::Get(const LookupKey& key, std::string* value, Status* s) {
       switch (static_cast<ValueType>(tag & 0xff)) {
         case kTypeValue: {
           Slice v = GetLengthPrefixedSlice(key_ptr + key_length);
-          // value->assign(v.data(), v.size());
-          // return true;
-
-          // TODO: extract the timestamp from the value (discuss #sid)
-          uint64_t ts = DecodeFixed64(v.data() + v.size() - 8);
-          auto& memo = DBImpl::um.memo_;
-          auto key_str{key.user_key().ToString()};
-          if (memo.find(key_str) == memo.end()) {
-            throw std::runtime_error("key not found in memo");
-          } else {
-            if (memo[key_str].first == ts) {
-              value->assign(v.data(), v.size() - 8);
-              return true;
-            } else {
-              return false;
-            }
-          }
+          value->assign(v.data(), v.size());
+          return true;
         }
         case kTypeDeletion:
           *s = Status::NotFound(Slice());

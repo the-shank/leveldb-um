@@ -118,8 +118,9 @@ void WriteBatch::Put(const Slice& key, const Slice& value) {
 }
 
 void WriteBatch::Delete(const Slice& key) {
-  WriteBatchInternal::SetCount(this, WriteBatchInternal::Count(this) + 1);
-  rep_.push_back(static_cast<char>(kTypeDeletion));
+  // WriteBatchInternal::SetCount(this, WriteBatchInternal::Count(this) + 1);
+  // rep_.push_back(static_cast<char>(kTypeDeletion));
+  // PutLengthPrefixedSlice(&rep_, key);
 
   // 1. increase the timestamp
   uint64_t ts = DBImpl::global_timestamp++;
@@ -133,9 +134,6 @@ void WriteBatch::Delete(const Slice& key) {
     memo[key_str].first = ts;
     memo[key_str].second++;
   }
-
-  // TODO: shank: discuss with #sid
-  PutLengthPrefixedSlice(&rep_, key);
 }
 
 void WriteBatch::Append(const WriteBatch& source) {
