@@ -4,13 +4,17 @@
 
 #include "db/builder.h"
 
+#include "db/db_impl.h"
 #include "db/dbformat.h"
 #include "db/filename.h"
 #include "db/table_cache.h"
 #include "db/version_edit.h"
+
 #include "leveldb/db.h"
 #include "leveldb/env.h"
 #include "leveldb/iterator.h"
+
+#include "util/coding.h"
 
 namespace leveldb {
 
@@ -33,7 +37,26 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
     Slice key;
     for (; iter->Valid(); iter->Next()) {
       key = iter->key();
-      builder->Add(key, iter->value());
+      // builder->Add(key, iter->value());
+
+      // NOTE: shank: we should only add the records that are not obsolete as
+      // per UM
+      Slice value = iter->value();
+      uint64_t timestamp = DecodeFixed64(value.data() + value.size() - 8);
+      auto& memo = DBImpl::um.memo_;
+      auto key_str{key.ToString()};
+      if (memo.find(key_str) == memo.end()) {
+        throw std::runtime_error("key not found in memo");
+      } else {
+        auto& memo_entry = memo[key_str];
+        if (memo_entry.first > timestamp) {
+          // obsolete
+          continue;
+        } else {
+          // not obsolete
+          builder->Add(key, value);
+        }
+      }
     }
     if (!key.empty()) {
       meta->largest.DecodeFrom(key);
