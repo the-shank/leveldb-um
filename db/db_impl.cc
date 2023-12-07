@@ -1171,29 +1171,19 @@ Status DBImpl::Get(const ReadOptions& options, const Slice& key,
     mutex_.Lock();
   }
 
-  // Check the UpdateMemo
-  // Invalidate the entry if the timestamp is older than the one in the UM
-  std::string keystr{key.ToString()};
-  // Check if key exists in the map
-  if (um.memo_.count(keystr) > 0) {
-    // Update the existing pair
-    if (um.memo_[keystr].first > ts) {
-      // Invalidate the entry
-      s = Status::NotFound(Slice());
-    }
-  }
-  // TODO: extract the timestamp from the value (discuss #sid)
-  uint64_t ts = DecodeFixed64(v.data() + v.size() - 8);
-  auto& memo = DBImpl::um.memo_;
-  auto key_str{key.user_key().ToString()};
-  if (memo.find(key_str) == memo.end()) {
-    throw std::runtime_error("key not found in memo");
-  } else {
-    if (memo[key_str].first == ts) {
-      value->assign(v.data(), v.size() - 8);
+  if (!s.IsNotFound()) {
+    auto &memo = DBImpl::um.memo_;
+    uint64_t ts = DecodeFixed64(value->c_str() + value->size() - 8);
+    auto key_str{key.ToString()};
+    if (memo.count(key_str) > 0) {
+      throw std::runtime_error("key not found in memo");
     } else {
-      std::cout << ">> MemTable::Get - key found in memo, but is "
-                   "obsolete (as per UM)\n";
+        if (memo[key_str].first > ts) {
+          // Invalidate the entry
+          s = Status::NotFound(Slice()); 
+        } else {
+          value->assign(value->c_str(), value->size() - 8);
+        }
     }
   }
 
