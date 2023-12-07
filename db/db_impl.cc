@@ -18,6 +18,7 @@
 #include <atomic>
 #include <cstdint>
 #include <cstdio>
+#include <iostream>
 #include <set>
 #include <string>
 #include <vector>
@@ -1571,6 +1572,14 @@ Status DestroyDB(const std::string& dbname, const Options& options) {
     env->RemoveDir(dbname);  // Ignore error in case dir contains other files
   }
   return result;
+}
+
+void UpdateMemo::print() {
+  std::cout << "UpdateMemo::print()\n";
+  for (auto& kv : memo_) {
+    std::cout << kv.first << " : " << kv.second.first << " : "
+              << kv.second.second << "\n";
+  }
 }
 
 }  // namespace leveldb
