@@ -510,7 +510,7 @@ Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
 
 Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
                                 Version* base) {
-  std::cout << ">> DBImpl::WriteLevel0Table" << std::endl;
+  // std::cout << ">> DBImpl::WriteLevel0Table" << std::endl;
   mutex_.AssertHeld();
   const uint64_t start_micros = env_->NowMicros();
   FileMetaData meta;
@@ -1011,6 +1011,10 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
       //           << " um_entry.first: " << um_entry.first
       //           << " um_entry.second: " << um_entry.second << "\n";
       if (um_entry.first > ts) {
+        // if (!drop) {
+        //   drop = true;
+        //   std::cout << ">>>> dropping because of UM\n";
+        // }
         drop = true;
         um_entry.second--;
         if (um_entry.second == 0) {
@@ -1029,6 +1033,10 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
       }
     }
     DBImpl::um.mutex_.Unlock();
+
+    // if (drop) {
+    //   std::cout << ">>>> drop=true : " << key.ToString() << "\n";
+    // }
 
     if (!drop) {
       // Open output file if necessary

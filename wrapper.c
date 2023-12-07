@@ -90,6 +90,22 @@ void runTest(leveldb_t* db, leveldb_writeoptions_t* woptions,
   }
   // }
 
+  for (int loop = 0; loop < 100; loop++) {
+    for (int j = 0; j < 5; j++) {
+      for (int i = 0; i < 1000; i++) {
+        memset(key, 0, 20);
+        sprintf(key, "key%d", i * j);
+        sprintf(
+            value,
+            "value%"
+            "dXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+            i);
+        leveldb_put(db, woptions, key, strlen(key), value, strlen(value), &err);
+      }
+    }
+  }
+
   for (int i = 0; i < 500000; i++) {
     memset(key, 0, 20);
     sprintf(key, "key%d", i);
@@ -103,6 +119,22 @@ void runTest(leveldb_t* db, leveldb_writeoptions_t* woptions,
     leveldb_delete(db, woptions, key, strlen(key), &err);
   }
 
+  for (int loop = 0; loop < 10000; loop++) {
+    for (int j = 0; j < 5; j++) {
+      for (int i = 0; i < 1000; i++) {
+        memset(key, 0, 20);
+        sprintf(key, "key%d", i * j);
+        sprintf(
+            value,
+            "value%"
+            "dXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+            i);
+        leveldb_put(db, woptions, key, strlen(key), value, strlen(value), &err);
+      }
+    }
+  }
+
   for (int i = 0; i < 500000; i++) {
     memset(key, 0, 20);
     sprintf(key, "key2%d", i);
@@ -113,7 +145,7 @@ void runTest(leveldb_t* db, leveldb_writeoptions_t* woptions,
             i);
     leveldb_put(db, woptions, key, strlen(key), value, strlen(value), &err);
   }
-  leveldb_print_um(db);
+  // leveldb_print_um(db);
 }
 
 int main(int argc, char** argv) {
@@ -137,6 +169,8 @@ int main(int argc, char** argv) {
   leveldb_readoptions_t* roptions = leveldb_readoptions_create();
 
   runTest(db, woptions, roptions);
+  // runTest(db, woptions, roptions);
+  // runTest(db, woptions, roptions);
 
   // while (1) {
   //   printf(
