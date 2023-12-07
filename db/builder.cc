@@ -9,6 +9,7 @@
 #include "db/filename.h"
 #include "db/table_cache.h"
 #include "db/version_edit.h"
+#include <iostream>
 
 #include "leveldb/db.h"
 #include "leveldb/env.h"
@@ -36,6 +37,7 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
     meta->smallest.DecodeFrom(iter->key());
     Slice key;
     for (; iter->Valid(); iter->Next()) {
+      std::cout << ">> iter...\n";
       key = iter->key();
       // builder->Add(key, iter->value());
 
@@ -44,12 +46,17 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
       Slice value = iter->value();
       uint64_t timestamp = DecodeFixed64(value.data() + value.size() - 8);
       auto& memo = DBImpl::um.memo_;
-      auto key_str{key.ToString()};
-      if (memo.find(key_str) == memo.end()) {
+      InternalKey internalKey;
+      internalKey.DecodeFrom(key);
+      auto key2 = internalKey.user_key().ToString();
+      if (memo.find(key2) == memo.end()) {
         // TODO: shank: this error is being triggered in benchmark (#sid)
+        // DBImpl::um.print();
+        std::cout << ">>>> ";
+        std::cout << "key2: " << key2 << std::endl;
         throw std::runtime_error("key not found in memo");
       } else {
-        auto& memo_entry = memo[key_str];
+        auto& memo_entry = memo[key2];
         if (memo_entry.first > timestamp) {
           // obsolete
           continue;
