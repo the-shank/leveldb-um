@@ -36,8 +36,9 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
     TableBuilder* builder = new TableBuilder(options, file);
     meta->smallest.DecodeFrom(iter->key());
     Slice key;
+    DBImpl::um.mutex_.Lock();
     for (; iter->Valid(); iter->Next()) {
-      std::cout << ">> iter...\n";
+      // std::cout << ">> iter...\n";
       key = iter->key();
       // builder->Add(key, iter->value());
 
@@ -45,15 +46,16 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
       // per UM
       Slice value = iter->value();
       uint64_t timestamp = DecodeFixed64(value.data() + value.size() - 8);
-      auto& memo = DBImpl::um.memo_;
       InternalKey internalKey;
       internalKey.DecodeFrom(key);
       auto key2 = internalKey.user_key().ToString();
+      auto& memo = DBImpl::um.memo_;
       if (memo.find(key2) == memo.end()) {
         // TODO: shank: this error is being triggered in benchmark (#sid)
-        // DBImpl::um.print();
         std::cout << ">>>> ";
-        std::cout << "key2: " << key2 << std::endl;
+        DBImpl::um.print();
+        std::cout << "key2: >>>" << key2 << "<<<" << std::endl;
+        std::cout << "key2.length(): " << key2.length() << std::endl;
         throw std::runtime_error("key not found in memo");
       } else {
         auto& memo_entry = memo[key2];
@@ -66,6 +68,7 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
         }
       }
     }
+    DBImpl::um.mutex_.Unlock();
     if (!key.empty()) {
       meta->largest.DecodeFrom(key);
     }

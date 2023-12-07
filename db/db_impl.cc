@@ -970,6 +970,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
       }
 
       // TODO: shank: check if this entry is obsoleted by the UM
+      DBImpl::um.mutex_.Lock();
       auto& memo = DBImpl::um.memo_;
       Slice value{input->value()};
       uint64_t ts = DecodeFixed64(value.data() + value.size() - 8);
@@ -982,6 +983,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
           drop = true;
         }
       }
+      DBImpl::um.mutex_.Unlock();
 
       if (last_sequence_for_key <= compact->smallest_snapshot) {
         // Hidden by an newer entry for same user key
@@ -1177,6 +1179,7 @@ Status DBImpl::Get(const ReadOptions& options, const Slice& key,
   }
 
   if (!s.IsNotFound()) {
+    DBImpl::um.mutex_.Lock();
     auto& memo = DBImpl::um.memo_;
     uint64_t ts = DecodeFixed64(value->c_str() + value->size() - 8);
     auto key_str{key.ToString()};
@@ -1188,6 +1191,7 @@ Status DBImpl::Get(const ReadOptions& options, const Slice& key,
         value->assign(value->c_str(), value->size() - 8);
       }
     }
+    DBImpl::um.mutex_.Unlock();
   }
 
   if (have_stat_update && current->UpdateStats(stats)) {
@@ -1614,11 +1618,13 @@ Status DestroyDB(const std::string& dbname, const Options& options) {
 }
 
 void UpdateMemo::print() {
+  DBImpl::um.mutex_.Lock();
   std::cout << "UpdateMemo::print()\n";
   for (auto& kv : memo_) {
     std::cout << kv.first << " : " << kv.second.first << " : "
               << kv.second.second << "\n";
   }
+  DBImpl::um.mutex_.Unlock();
 }
 
 }  // namespace leveldb

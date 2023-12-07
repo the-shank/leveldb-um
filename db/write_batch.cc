@@ -106,6 +106,7 @@ void WriteBatch::Put(const Slice& key, const Slice& value) {
   // 1. increase the timestamp
   uint64_t ts = DBImpl::global_timestamp++;
   // 2. create entry in updatememo
+  DBImpl::um.mutex_.Lock();
   auto& memo = DBImpl::um.memo_;
   auto key_str{key.ToString()};
   if (memo.find(key_str) == memo.end()) {
@@ -114,6 +115,7 @@ void WriteBatch::Put(const Slice& key, const Slice& value) {
     memo[key_str].first = ts;
     memo[key_str].second++;
   }
+  DBImpl::um.mutex_.Unlock();
   PutLengthPrefixedSlice(&rep_, value, true, ts);
 }
 
@@ -125,6 +127,7 @@ void WriteBatch::Delete(const Slice& key) {
   // 1. increase the timestamp
   uint64_t ts = DBImpl::global_timestamp++;
   // 2. create entry in updatememo
+  DBImpl::um.mutex_.Lock();
   auto& memo = DBImpl::um.memo_;
   auto key_str{key.ToString()};
   if (memo.find(key_str) == memo.end()) {
@@ -134,6 +137,7 @@ void WriteBatch::Delete(const Slice& key) {
     memo[key_str].first = ts;
     memo[key_str].second++;
   }
+  DBImpl::um.mutex_.Unlock();
 }
 
 void WriteBatch::Append(const WriteBatch& source) {
