@@ -55,6 +55,8 @@ struct DBImpl::Writer {
 
 std::atomic<uint64_t> DBImpl::global_timestamp(0);
 
+UpdateMemo DBImpl::um{};
+
 struct DBImpl::CompactionState {
   // Files produced by compaction
   struct Output {
