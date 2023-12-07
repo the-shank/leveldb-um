@@ -997,23 +997,35 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
         (int)last_sequence_for_key, (int)compact->smallest_snapshot);
 #endif
 
-    if (!drop) {
-      // TODO: shank: check if this entry is obsoleted by the UM
-      DBImpl::um.mutex_.Lock();
-      auto& memo = DBImpl::um.memo_;
-      Slice value{input->value()};
-      uint64_t ts = DecodeFixed64(value.data() + value.size() - 8);
-      auto key_str{ikey.user_key.ToString()};
-      if (memo.find(key_str) == memo.end()) {
-        throw std::runtime_error("key not found in UM");
-      } else {
-        auto& um_entry = memo[key_str];
-        if (um_entry.first > ts) {
-          drop = true;
+    // TODO: shank: check if this entry is obsoleted by the UM
+    DBImpl::um.mutex_.Lock();
+    auto& memo = DBImpl::um.memo_;
+    Slice value{input->value()};
+    uint64_t ts = DecodeFixed64(value.data() + value.size() - 8);
+    auto key_str{ikey.user_key.ToString()};
+    if (memo.find(key_str) == memo.end()) {
+      throw std::runtime_error("key not found in UM");
+    } else {
+      auto& um_entry = memo[key_str];
+      if (um_entry.first > ts) {
+        drop = true;
+        um_entry.second--;
+        if (um_entry.second == 0) {
+          memo.erase(key_str);
+          std::cout << ">>>> YIPEE! " << key_str << " is deleted from UM\n";
+          throw std::runtime_error("key deleted from UM2");
         }
       }
-      DBImpl::um.mutex_.Unlock();
+      if (um_entry.second == 1 && ikey.type == kTypeDeletion) {
+        // NOTE: shank: check if this is a delete entry, in which case, we can
+        // delete the entry from the UM
+        drop = true;
+        memo.erase(key_str);
+        std::cout << ">>>> um_enty.second == 1 and this is a deletion entry\n";
+        throw std::runtime_error("key deleted from UM2");
+      }
     }
+    DBImpl::um.mutex_.Unlock();
 
     if (!drop) {
       // Open output file if necessary

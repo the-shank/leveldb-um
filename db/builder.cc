@@ -46,9 +46,14 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
       // per UM
       Slice value = iter->value();
       uint64_t timestamp = DecodeFixed64(value.data() + value.size() - 8);
-      InternalKey internalKey;
-      internalKey.DecodeFrom(key);
-      auto key2 = internalKey.user_key().ToString();
+      // InternalKey internalKey;
+      // internalKey.DecodeFrom(key);
+      // auto key2 = internalKey.user_key().ToString();
+      ParsedInternalKey parsedInternalKey;
+      if (!ParseInternalKey(key, &parsedInternalKey)) {
+        throw std::runtime_error("ParseInternalKey failed");
+      };
+      auto key2 = parsedInternalKey.user_key.ToString();
       auto& memo = DBImpl::um.memo_;
       if (memo.find(key2) == memo.end()) {
         // TODO: shank: this error is being triggered in benchmark (#sid)
@@ -61,7 +66,22 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
         auto& memo_entry = memo[key2];
         if (memo_entry.first > timestamp) {
           // obsolete
+          // std::cout << ">>>> skipping writing obsolete entry to disk\n";
+          memo_entry.second--;
+          if (memo_entry.second == 0) {
+            std::cout << ">>>> erasing key from UM\n";
+            memo.erase(key2);
+            throw std::runtime_error("YIPEE! key erased from UM");
+          }
           continue;
+        } else if (memo_entry.second == 1 &&
+                   parsedInternalKey.type == kTypeDeletion) {
+          // NOTE: shank: this is the only entry for this item.
+          // If this entry is a delete, then we should not add it to the table
+          std::cout << ">>>> memo_entry.second == 1 && parsedInternalKey.type "
+                       "== kTypeDeletion\n";
+          throw std::runtime_error("YIPEE! key erased from UM");
+          // builder->Add(key, value);
         } else {
           // not obsolete
           builder->Add(key, value);
