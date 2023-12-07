@@ -1162,14 +1162,12 @@ Status DBImpl::Get(const ReadOptions& options, const Slice& key,
     uint64_t ts = DecodeFixed64(value->c_str() + value->size() - 8);
     auto key_str{key.ToString()};
     if (memo.count(key_str) > 0) {
-      throw std::runtime_error("key not found in memo");
-    } else {
-        if (memo[key_str].first > ts) {
-          // Invalidate the entry
-          s = Status::NotFound(Slice()); 
-        } else {
-          value->assign(value->c_str(), value->size() - 8);
-        }
+      if (memo[key_str].first > ts) {
+        // Invalidate the entry
+        s = Status::NotFound(Slice()); 
+      } else {
+        value->assign(value->c_str(), value->size() - 8);
+      }
     }
   }
 
