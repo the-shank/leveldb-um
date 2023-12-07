@@ -120,6 +120,21 @@ void WriteBatch::Put(const Slice& key, const Slice& value) {
 void WriteBatch::Delete(const Slice& key) {
   WriteBatchInternal::SetCount(this, WriteBatchInternal::Count(this) + 1);
   rep_.push_back(static_cast<char>(kTypeDeletion));
+
+  // 1. increase the timestamp
+  uint64_t ts = DBImpl::global_timestamp++;
+  // 2. create entry in updatememo
+  auto& memo = DBImpl::um.memo_;
+  auto key_str{key.ToString()};
+  if (memo.find(key_str) == memo.end()) {
+    // NOTE: this should never happen, but just in case
+    memo[key_str] = std::make_pair(ts, 1);
+  } else {
+    memo[key_str].first = ts;
+    memo[key_str].second++;
+  }
+
+  // TODO: shank: discuss with #sid
   PutLengthPrefixedSlice(&rep_, key);
 }
 
