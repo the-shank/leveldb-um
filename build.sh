@@ -7,7 +7,8 @@ cd build/
 
 # command line arguments
 if [ $# -ne 1 ]; then
-	cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+	# cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+	cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
 	cmake --build . -j 16
 else
 	if [ $1 = "coverage" ]; then

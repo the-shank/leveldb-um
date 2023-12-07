@@ -52,10 +52,10 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
       auto& memo = DBImpl::um.memo_;
       if (memo.find(key2) == memo.end()) {
         // TODO: shank: this error is being triggered in benchmark (#sid)
-        std::cout << ">>>> ";
-        DBImpl::um.print();
-        std::cout << "key2: >>>" << key2 << "<<<" << std::endl;
-        std::cout << "key2.length(): " << key2.length() << std::endl;
+        // std::cout << ">>>> ";
+        // DBImpl::um.print();
+        // std::cout << "key2: >>>" << key2 << "<<<" << std::endl;
+        // std::cout << "key2.length(): " << key2.length() << std::endl;
         throw std::runtime_error("key not found in memo");
       } else {
         auto& memo_entry = memo[key2];

@@ -969,22 +969,6 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
         last_sequence_for_key = kMaxSequenceNumber;
       }
 
-      // TODO: shank: check if this entry is obsoleted by the UM
-      DBImpl::um.mutex_.Lock();
-      auto& memo = DBImpl::um.memo_;
-      Slice value{input->value()};
-      uint64_t ts = DecodeFixed64(value.data() + value.size() - 8);
-      auto key_str{ikey.user_key.ToString()};
-      if (memo.find(key_str) == memo.end()) {
-        throw std::runtime_error("key not found in UM");
-      } else {
-        auto& um_entry = memo[key_str];
-        if (um_entry.first > ts) {
-          drop = true;
-        }
-      }
-      DBImpl::um.mutex_.Unlock();
-
       if (last_sequence_for_key <= compact->smallest_snapshot) {
         // Hidden by an newer entry for same user key
         drop = true;  // (A)
@@ -1012,6 +996,24 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
         compact->compaction->IsBaseLevelForKey(ikey.user_key),
         (int)last_sequence_for_key, (int)compact->smallest_snapshot);
 #endif
+
+    if (!drop) {
+      // TODO: shank: check if this entry is obsoleted by the UM
+      DBImpl::um.mutex_.Lock();
+      auto& memo = DBImpl::um.memo_;
+      Slice value{input->value()};
+      uint64_t ts = DecodeFixed64(value.data() + value.size() - 8);
+      auto key_str{ikey.user_key.ToString()};
+      if (memo.find(key_str) == memo.end()) {
+        throw std::runtime_error("key not found in UM");
+      } else {
+        auto& um_entry = memo[key_str];
+        if (um_entry.first > ts) {
+          drop = true;
+        }
+      }
+      DBImpl::um.mutex_.Unlock();
+    }
 
     if (!drop) {
       // Open output file if necessary
