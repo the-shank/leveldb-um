@@ -46,6 +46,7 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
       auto& memo = DBImpl::um.memo_;
       auto key_str{key.ToString()};
       if (memo.find(key_str) == memo.end()) {
+        // TODO: shank: this error is being triggered in benchmark (#sid)
         throw std::runtime_error("key not found in memo");
       } else {
         auto& memo_entry = memo[key_str];

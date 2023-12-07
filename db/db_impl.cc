@@ -1302,8 +1302,8 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
     writers_.front()->cv.Signal();
   }
 
-  std::cout << ">> DBImpl::Write() status: " << status.ToString() << "\n";
-  um.print();
+  // std::cout << ">> DBImpl::Write() status: " << status.ToString() << "\n";
+  // um.print();
 
   return status;
 }
