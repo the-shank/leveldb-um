@@ -510,7 +510,7 @@ Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
 
 Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
                                 Version* base) {
-  std::cout << ">> DBImpl::WriteLevel0Table" << std::endl;
+  // std::cout << ">> DBImpl::WriteLevel0Table" << std::endl;
   mutex_.AssertHeld();
   const uint64_t start_micros = env_->NowMicros();
   FileMetaData meta;
@@ -523,10 +523,10 @@ Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
   Status s;
   {
     mutex_.Unlock();
-    std::cout << ">> DBImpl::WriteLevel0Table => BuildTable" << std::endl;
+    // std::cout << ">> DBImpl::WriteLevel0Table => BuildTable" << std::endl;
     s = BuildTable(dbname_, env_, options_, table_cache_, iter, &meta);
-    std::cout << ">> DBImpl::WriteLevel0Table => BuildTable => done"
-              << std::endl;
+    // std::cout << ">> DBImpl::WriteLevel0Table => BuildTable => done"
+    //           << std::endl;
     mutex_.Lock();
   }
 
@@ -553,7 +553,7 @@ Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
   stats.micros = env_->NowMicros() - start_micros;
   stats.bytes_written = meta.file_size;
   stats_[level].Add(stats);
-  std::cout << ">> DBImpl::WriteLevel0Table => done" << std::endl;
+  // std::cout << ">> DBImpl::WriteLevel0Table => done" << std::endl;
   return s;
 }
 
@@ -1141,7 +1141,7 @@ int64_t DBImpl::TEST_MaxNextLevelOverlappingBytes() {
 
 Status DBImpl::Get(const ReadOptions& options, const Slice& key,
                    std::string* value) {
-  std::cout << ">> DBImpl::Get() - key: " << key.ToString() << "\n";
+  // std::cout << ">> DBImpl::Get() - key: " << key.ToString() << "\n";
   Status s;
   MutexLock l(&mutex_);
   SequenceNumber snapshot;
