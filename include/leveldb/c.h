@@ -76,6 +76,8 @@ LEVELDB_EXPORT leveldb_t* leveldb_open(const leveldb_options_t* options,
 
 LEVELDB_EXPORT void leveldb_close(leveldb_t* db);
 
+LEVELDB_EXPORT void leveldb_print_um(leveldb_t* db);
+
 LEVELDB_EXPORT void leveldb_put(leveldb_t* db,
                                 const leveldb_writeoptions_t* options,
                                 const char* key, size_t keylen, const char* val,

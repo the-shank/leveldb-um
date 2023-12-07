@@ -74,10 +74,12 @@ void viewAll(leveldb_t* db, leveldb_readoptions_t* roptions) {
 
 void runTest(leveldb_t* db, leveldb_writeoptions_t* woptions,
              leveldb_readoptions_t* roptions) {
-  char key[100], value[150];
+  char key[20], value[150];
   char* err = NULL;  // Error pointer
 
-  for (int i = 0; i < 22100; i++) {
+  // for (int j = 0; j < 3; j++) {
+  for (int i = 0; i < 500000; i++) {
+    memset(key, 0, 20);
     sprintf(key, "key%d", i);
     sprintf(value,
             "value%"
@@ -86,6 +88,32 @@ void runTest(leveldb_t* db, leveldb_writeoptions_t* woptions,
             i);
     leveldb_put(db, woptions, key, strlen(key), value, strlen(value), &err);
   }
+  // }
+
+  for (int i = 0; i < 500000; i++) {
+    memset(key, 0, 20);
+    sprintf(key, "key%d", i);
+    // sprintf(value,
+    //         "value%"
+    // "dXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    // "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    //         i);
+    // leveldb_put(db, woptions, key, strlen(key), value, strlen(value),
+    // &err);
+    leveldb_delete(db, woptions, key, strlen(key), &err);
+  }
+
+  for (int i = 0; i < 500000; i++) {
+    memset(key, 0, 20);
+    sprintf(key, "key2%d", i);
+    sprintf(value,
+            "value%"
+            "dXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+            i);
+    leveldb_put(db, woptions, key, strlen(key), value, strlen(value), &err);
+  }
+  leveldb_print_um(db);
 }
 
 int main(int argc, char** argv) {
@@ -108,36 +136,35 @@ int main(int argc, char** argv) {
   leveldb_writeoptions_t* woptions = leveldb_writeoptions_create();
   leveldb_readoptions_t* roptions = leveldb_readoptions_create();
 
-  // runTest(db, woptions, roptions);
+  runTest(db, woptions, roptions);
 
-  while (1) {
-    printf(
-        "\n1. Add Data\n2. View Data\n3. View All\n4. Delete\n5. Exit\nEnter "
-        "your "
-        "choice: ");
-    int choice;
-    scanf("%d", &choice);
-
-    switch (choice) {
-      case 1:
-        addData(db, woptions);
-        break;
-      case 2:
-        viewData(db, roptions);
-        break;
-      case 3:
-        viewAll(db, roptions);
-        break;
-      case 4:
-        deleteData(db, woptions);
-        break;
-      case 5:
-        leveldb_close(db);
-        return 0;
-      default:
-        printf("Invalid choice.\n");
-    }
-  }
+  // while (1) {
+  //   printf(
+  //       "\n1. Add Data\n2. View Data\n3. View All\n4. Delete\n5. Exit\nEnter
+  //       " "your " "choice: ");
+  //   int choice;
+  //   scanf("%d", &choice);
+  //
+  //   switch (choice) {
+  //     case 1:
+  //       addData(db, woptions);
+  //       break;
+  //     case 2:
+  //       viewData(db, roptions);
+  //       break;
+  //     case 3:
+  //       viewAll(db, roptions);
+  //       break;
+  //     case 4:
+  //       deleteData(db, woptions);
+  //       break;
+  //     case 5:
+  //       leveldb_close(db);
+  //       return 0;
+  //     default:
+  //       printf("Invalid choice.\n");
+  //   }
+  // }
 
   leveldb_close(db);
   leveldb_options_destroy(options);

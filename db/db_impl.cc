@@ -510,7 +510,7 @@ Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
 
 Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
                                 Version* base) {
-  // std::cout << ">> DBImpl::WriteLevel0Table" << std::endl;
+  std::cout << ">> DBImpl::WriteLevel0Table" << std::endl;
   mutex_.AssertHeld();
   const uint64_t start_micros = env_->NowMicros();
   FileMetaData meta;
@@ -1007,6 +1007,9 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
       throw std::runtime_error("key not found in UM");
     } else {
       auto& um_entry = memo[key_str];
+      // std::cout << ">>>> key: " << key_str << " ts: " << ts
+      //           << " um_entry.first: " << um_entry.first
+      //           << " um_entry.second: " << um_entry.second << "\n";
       if (um_entry.first > ts) {
         drop = true;
         um_entry.second--;

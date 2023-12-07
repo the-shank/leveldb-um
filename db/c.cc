@@ -4,10 +4,10 @@
 
 #include "leveldb/c.h"
 
-#include <string.h>
-
+#include "db/db_impl.h"
 #include <cstdint>
 #include <cstdlib>
+#include <string.h>
 
 #include "leveldb/cache.h"
 #include "leveldb/comparator.h"
@@ -23,6 +23,7 @@ using leveldb::Cache;
 using leveldb::Comparator;
 using leveldb::CompressionType;
 using leveldb::DB;
+using leveldb::DBImpl;
 using leveldb::Env;
 using leveldb::FileLock;
 using leveldb::FilterPolicy;
@@ -45,7 +46,6 @@ using leveldb::WriteBatch;
 using leveldb::WriteOptions;
 
 extern "C" {
-
 struct leveldb_t {
   DB* rep;
 };
@@ -181,9 +181,16 @@ void leveldb_close(leveldb_t* db) {
   delete db;
 }
 
+void leveldb_print_um(leveldb_t* db) {
+  DBImpl* dbimpl = reinterpret_cast<DBImpl*>(db->rep);
+  printf(">> leveldb_print_um: size=%zu\n", dbimpl->um.memo_.size());
+  // dbimpl->um.print();
+}
+
 void leveldb_put(leveldb_t* db, const leveldb_writeoptions_t* options,
                  const char* key, size_t keylen, const char* val, size_t vallen,
                  char** errptr) {
+  // printf(">> leveldb_put\n");
   SaveError(errptr,
             db->rep->Put(options->rep, Slice(key, keylen), Slice(val, vallen)));
 }

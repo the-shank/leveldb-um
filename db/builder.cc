@@ -64,9 +64,11 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
         throw std::runtime_error("key not found in memo");
       } else {
         auto& memo_entry = memo[key2];
+        // std::cout << ">>>> memo_entry.first: " << memo_entry.first
+        //           << " timestamp: " << timestamp << std::endl;
         if (memo_entry.first > timestamp) {
           // obsolete
-          // std::cout << ">>>> skipping writing obsolete entry to disk\n";
+          std::cout << ">>>> skipping writing obsolete entry to disk\n";
           memo_entry.second--;
           if (memo_entry.second == 0) {
             std::cout << ">>>> erasing key from UM\n";
