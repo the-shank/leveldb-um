@@ -1,9 +1,7 @@
 # Hemant Dantam, Shashank Sharma, Siddharth Muralee
 # UM-LSM Tree Project (Adding on to LevelDB)
+
 # Instructions for Replicating Results
-
-# Altered Files from Original Database:
-
   * db/db_impl.cc, db/db_impl.h, db/write_batch.cc, db/builder.cc, db/c.cc contain the main files altered for our implementation
   * wrapper.c contains the file in which we ran our synthetic tests, simply running the shell file (wrapper_build.sh) and creating a test folder for the outputs to be written to will allow you to run it. 
   * The wrapper requires levelDB to be built first (running the ./build.sh file should do it, otherwise check below under Building for additional help depending on device)
