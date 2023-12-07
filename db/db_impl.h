@@ -101,6 +101,11 @@ class DBImpl : public DB {
   // TODO: shank: should this be guarded by a mutex, or atomic is fine?
   static std::atomic<uint64_t> global_timestamp;
 
+  // update memo
+  // TODO: shank: this should be guarded by A mutex as well...
+  // but i'm not sure which one
+  static UpdateMemo um;
+
  private:
   friend class DB;
   struct CompactionState;
@@ -233,11 +238,6 @@ class DBImpl : public DB {
   Status bg_error_ GUARDED_BY(mutex_);
 
   CompactionStats stats_[config::kNumLevels] GUARDED_BY(mutex_);
-
-  // update memo
-  // TODO: shank: this should be guarded by A mutex as well...
-  // but i'm not sure which one
-  UpdateMemo um;
 };
 
 // Sanitize db options.  The caller should delete result.info_log if

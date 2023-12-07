@@ -26,7 +26,7 @@ void PutFixed64(std::string* dst, uint64_t value);
 void PutVarint32(std::string* dst, uint32_t value);
 void PutVarint64(std::string* dst, uint64_t value);
 void PutLengthPrefixedSlice(std::string* dst, const Slice& value,
-                            bool with_ts = false);
+                            bool with_ts = false, uint64_t ts = 0);
 
 // Standard Get... routines parse a value from the beginning of a Slice
 // and advance the slice past the parsed value.

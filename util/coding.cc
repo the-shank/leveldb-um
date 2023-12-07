@@ -72,12 +72,12 @@ void PutVarint64(std::string* dst, uint64_t v) {
   dst->append(buf, ptr - buf);
 }
 
-void PutLengthPrefixedSlice(std::string* dst, const Slice& value,
-                            bool with_ts) {
+void PutLengthPrefixedSlice(std::string* dst, const Slice& value, bool with_ts,
+                            uint64_t ts) {
   if (with_ts) {
     PutVarint32(dst, value.size() + sizeof(uint64_t));
     dst->append(value.data(), value.size());
-    PutFixed64(dst, DBImpl::global_timestamp++);
+    PutFixed64(dst, ts);
   } else {
     PutVarint32(dst, value.size());
     dst->append(value.data(), value.size());
