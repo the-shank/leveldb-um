@@ -3,10 +3,14 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #include "db/memtable.h"
+
+#include "db/db_impl.h"
 #include "db/dbformat.h"
+
 #include "leveldb/comparator.h"
 #include "leveldb/env.h"
 #include "leveldb/iterator.h"
+
 #include "util/coding.h"
 
 namespace leveldb {
@@ -123,8 +127,23 @@ bool MemTable::Get(const LookupKey& key, std::string* value, Status* s) {
       switch (static_cast<ValueType>(tag & 0xff)) {
         case kTypeValue: {
           Slice v = GetLengthPrefixedSlice(key_ptr + key_length);
-          value->assign(v.data(), v.size());
-          return true;
+          // value->assign(v.data(), v.size());
+          // return true;
+
+          // TODO: extract the timestamp from the value (discuss #sid)
+          uint64_t ts = DecodeFixed64(v.data() + v.size() - 8);
+          auto& memo = DBImpl::um.memo_;
+          auto key_str{key.user_key().ToString()};
+          if (memo.find(key_str) == memo.end()) {
+            throw std::runtime_error("key not found in memo");
+          } else {
+            if (memo[key_str].first == ts) {
+              value->assign(v.data(), v.size() - 8);
+              return true;
+            } else {
+              return false;
+            }
+          }
         }
         case kTypeDeletion:
           *s = Status::NotFound(Slice());
