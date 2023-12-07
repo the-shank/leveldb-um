@@ -50,7 +50,8 @@ class UpdateMemo {
   // 3. make it fast
   // TODO: shank: limit the UM size to be 4MB (i.e. 1 page) (#sid)
   port::Mutex mutex_;
-  std::unordered_map<std::string, std::pair<uint64_t, uint64_t>> memo_;
+  // std::unordered_map<std::string, std::pair<uint64_t, uint64_t>> memo_;
+  std::unordered_map<std::string, uint64_t> memo_;
 };
 
 class DBImpl : public DB {

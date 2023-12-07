@@ -109,12 +109,16 @@ void WriteBatch::Put(const Slice& key, const Slice& value) {
   DBImpl::um.mutex_.Lock();
   auto& memo = DBImpl::um.memo_;
   auto key_str{key.ToString()};
-  if (memo.find(key_str) == memo.end()) {
-    memo[key_str] = std::make_pair(ts, 1);
-  } else {
-    memo[key_str].first = ts;
-    memo[key_str].second++;
-  }
+  memo[key_str] = ts;
+  // auto it = memo.find(key_str);
+  // if (it == memo.end()) {
+  //   // it->second = std::make_pair(ts, 1);
+  //   it->second = ts;
+  // } else {
+  //   it->second = ts;
+  //   // memo[key_str].first = ts;
+  //   // memo[key_str].second++;
+  // }
   DBImpl::um.mutex_.Unlock();
   PutLengthPrefixedSlice(&rep_, value, true, ts);
 }
@@ -130,13 +134,14 @@ void WriteBatch::Delete(const Slice& key) {
   DBImpl::um.mutex_.Lock();
   auto& memo = DBImpl::um.memo_;
   auto key_str{key.ToString()};
-  if (memo.find(key_str) == memo.end()) {
-    // NOTE: this should never happen, but just in case
-    memo[key_str] = std::make_pair(ts, 1);
-  } else {
-    memo[key_str].first = ts;
-    memo[key_str].second++;
-  }
+  memo[key_str] = ts;
+  // if (memo.find(key_str) == memo.end()) {
+  //   // NOTE: this should never happen, but just in case
+  //   memo[key_str] = std::make_pair(ts, 0);
+  // } else {
+  //   memo[key_str].first = ts;
+  //   memo[key_str].second;
+  // }
   DBImpl::um.mutex_.Unlock();
 }
 

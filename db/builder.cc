@@ -55,40 +55,51 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
       };
       auto key2 = parsedInternalKey.user_key.ToString();
       auto& memo = DBImpl::um.memo_;
-      if (memo.find(key2) == memo.end()) {
-        // TODO: shank: this error is being triggered in benchmark (#sid)
-        // std::cout << ">>>> ";
-        // DBImpl::um.print();
-        // std::cout << "key2: >>>" << key2 << "<<<" << std::endl;
-        // std::cout << "key2.length(): " << key2.length() << std::endl;
+      auto it = memo.find(key2);
+      if (it == memo.end()) {
         throw std::runtime_error("key not found in memo");
       } else {
-        auto& memo_entry = memo[key2];
-        // std::cout << ">>>> memo_entry.first: " << memo_entry.first
-        //           << " timestamp: " << timestamp << std::endl;
-        if (memo_entry.first > timestamp) {
-          // obsolete
-          // std::cout << ">>>> skipping writing obsolete entry to disk\n";
-          memo_entry.second--;
-          if (memo_entry.second == 0) {
-            std::cout << ">>>> erasing key from UM\n";
-            memo.erase(key2);
-            throw std::runtime_error("YIPEE! key erased from UM");
-          }
+        if (it->second > timestamp) {
           continue;
-        } else if (memo_entry.second == 1 &&
-                   parsedInternalKey.type == kTypeDeletion) {
-          // NOTE: shank: this is the only entry for this item.
-          // If this entry is a delete, then we should not add it to the table
-          std::cout << ">>>> memo_entry.second == 1 && parsedInternalKey.type "
-                       "== kTypeDeletion\n";
-          throw std::runtime_error("YIPEE! key erased from UM");
-          // builder->Add(key, value);
         } else {
           // not obsolete
           builder->Add(key, value);
         }
       }
+      // if (memo.find(key2) == memo.end()) {
+      //   // TODO: shank: this error is being triggered in benchmark (#sid)
+      //   // std::cout << ">>>> ";
+      //   // DBImpl::um.print();
+      //   // std::cout << "key2: >>>" << key2 << "<<<" << std::endl;
+      //   // std::cout << "key2.length(): " << key2.length() << std::endl;
+      //   throw std::runtime_error("key not found in memo");
+      // } else {
+      //   auto& memo_entry = memo[key2];
+      //   // std::cout << ">>>> memo_entry.first: " << memo_entry.first
+      //   //           << " timestamp: " << timestamp << std::endl;
+      //   if (memo_entry.first > timestamp) {
+      //     // obsolete
+      //     // std::cout << ">>>> skipping writing obsolete entry to disk\n";
+      //     memo_entry.second--;
+      //     if (memo_entry.second == 0) {
+      //       std::cout << ">>>> erasing key from UM\n";
+      //       memo.erase(key2);
+      //       throw std::runtime_error("YIPEE! key erased from UM");
+      //     }
+      //     continue;
+      //   } else if (memo_entry.second == 1 &&
+      //              parsedInternalKey.type == kTypeDeletion) {
+      //     // NOTE: shank: this is the only entry for this item.
+      //     // If this entry is a delete, then we should not add it to the table
+      //     std::cout << ">>>> memo_entry.second == 1 && parsedInternalKey.type "
+      //                  "== kTypeDeletion\n";
+      //     throw std::runtime_error("YIPEE! key erased from UM");
+      //     // builder->Add(key, value);
+      //   } else {
+      //     // not obsolete
+      //     builder->Add(key, value);
+      //   }
+      // }
     }
     DBImpl::um.mutex_.Unlock();
     if (!key.empty()) {

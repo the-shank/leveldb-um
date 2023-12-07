@@ -1003,34 +1003,35 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
     Slice value{input->value()};
     uint64_t ts = DecodeFixed64(value.data() + value.size() - 8);
     auto key_str{ikey.user_key.ToString()};
-    if (memo.find(key_str) == memo.end()) {
+    auto it = memo.find(key_str);
+    if (it == memo.end()) {
       throw std::runtime_error("key not found in UM");
     } else {
-      auto& um_entry = memo[key_str];
+      // auto& um_entry = memo[key_str];
       // std::cout << ">>>> key: " << key_str << " ts: " << ts
       //           << " um_entry.first: " << um_entry.first
       //           << " um_entry.second: " << um_entry.second << "\n";
-      if (um_entry.first > ts) {
+      if (it->second > ts) {
         // if (!drop) {
         //   drop = true;
         //   std::cout << ">>>> dropping because of UM\n";
         // }
-        drop = true;
-        um_entry.second--;
-        if (um_entry.second == 0) {
-          memo.erase(key_str);
-          std::cout << ">>>> YIPEE! " << key_str << " is deleted from UM\n";
-          throw std::runtime_error("key deleted from UM2");
-        }
+        // drop = true;
+        // it->second.second--;
+        // if (um_entry.second == 0) {
+        //   memo.erase(key_str);
+        //   std::cout << ">>>> YIPEE! " << key_str << " is deleted from UM\n";
+        //   throw std::runtime_error("key deleted from UM2");
+        // }
       }
-      if (um_entry.second == 1 && ikey.type == kTypeDeletion) {
-        // NOTE: shank: check if this is a delete entry, in which case, we can
-        // delete the entry from the UM
-        drop = true;
-        memo.erase(key_str);
-        std::cout << ">>>> um_enty.second == 1 and this is a deletion entry\n";
-        throw std::runtime_error("key deleted from UM2");
-      }
+      // if (um_entry.second == 1 && ikey.type == kTypeDeletion) {
+      //   // NOTE: shank: check if this is a delete entry, in which case, we can
+      //   // delete the entry from the UM
+      //   drop = true;
+      //   memo.erase(key_str);
+      //   std::cout << ">>>> um_enty.second == 1 and this is a deletion entry\n";
+      //   throw std::runtime_error("key deleted from UM2");
+      // }
     }
     DBImpl::um.mutex_.Unlock();
 
@@ -1206,14 +1207,18 @@ Status DBImpl::Get(const ReadOptions& options, const Slice& key,
   if (!s.IsNotFound()) {
     DBImpl::um.mutex_.Lock();
     auto& memo = DBImpl::um.memo_;
-    uint64_t ts = DecodeFixed64(value->c_str() + value->size() - 8);
+    size_t value_size = value->size();
+    uint64_t ts = DecodeFixed64(value->c_str() + value_size - 8);
     auto key_str{key.ToString()};
-    if (memo.count(key_str) > 0) {
-      if (memo[key_str].first > ts) {
+    auto it = memo.find(key_str);
+    // if (memo.count(key_str) > 0) {
+    if (it != memo.end()) {
+      if (it->second > ts) {
         // Invalidate the entry
         s = Status::NotFound(Slice());
       } else {
-        value->assign(value->c_str(), value->size() - 8);
+        value->resize(value_size - 8);
+        // value->erase(8, std::string::npos);
       }
     }
     DBImpl::um.mutex_.Unlock();
@@ -1646,8 +1651,9 @@ void UpdateMemo::print() {
   DBImpl::um.mutex_.Lock();
   std::cout << "UpdateMemo::print()\n";
   for (auto& kv : memo_) {
-    std::cout << kv.first << " : " << kv.second.first << " : "
-              << kv.second.second << "\n";
+    std::cout << kv.first << " : " << kv.second<< "\n";
+    // std::cout << kv.first << " : " << kv.second.first << " : "
+    //           << kv.second.second << "\n";
   }
   DBImpl::um.mutex_.Unlock();
 }
