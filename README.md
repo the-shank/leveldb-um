@@ -1,14 +1,38 @@
-# Hemant Dantam, Shashank Sharma, Siddharth Muralee
 # UM-LSM Tree Project (Adding on to LevelDB)
+Authors : Hemant Dantam, Shashank Sharma, Siddharth Muralee
 
-# Instructions for Replicating Results
+## Instructions for Replicating Results
+
+Follow the below instructions to compile and test our code.
+
+### Compiling the Code
+
+We have a script - `build.sh`, which will compile the code.
+
+### Synthetic BenchMark
+
+Run the following command to run the synthetic benchmark that we created.
+
+```bash
+./build.sh; ./wrapper_build.sh; rm -rf ../test/;time ./wrapper ../test/
+```
+
+### Existing BenchMark
+
+Run the following command to run the db_bench benchmarking tool that's a part of the the code.
+
+```bash
+./build.sh; ./build/db_bench
+```
+
+### Summary (incomplete) of changes we made
+
   * db/db_impl.cc, db/db_impl.h, db/write_batch.cc, db/builder.cc, db/c.cc contain the main files altered for our implementation
   * wrapper.c contains the file in which we ran our synthetic tests, simply running the shell file (wrapper_build.sh) and creating a test folder for the outputs to be written to will allow you to run it. 
   * The wrapper requires levelDB to be built first (running the ./build.sh file should do it, otherwise check below under Building for additional help depending on device)
   * Other tests we ran were through the existing benchmark tests under ./benchmarks
 
-
-# Everything Below contains additional useful information about LevelDB from the original contributors if needed
+## Everything Below contains additional useful information about LevelDB from the original contributors if needed
 
 Authors: Sanjay Ghemawat (sanjay@google.com) and Jeff Dean (jeff@google.com)
 
