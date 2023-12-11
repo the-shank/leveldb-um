@@ -1016,7 +1016,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
         //   drop = true;
         //   std::cout << ">>>> dropping because of UM\n";
         // }
-        // drop = true;
+        drop = true;
         // it->second.second--;
         // if (um_entry.second == 0) {
         //   memo.erase(key_str);
