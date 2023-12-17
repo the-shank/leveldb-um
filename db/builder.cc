@@ -36,7 +36,6 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
     TableBuilder* builder = new TableBuilder(options, file);
     meta->smallest.DecodeFrom(iter->key());
     Slice key;
-    DBImpl::um.mutex_.Lock();
     for (; iter->Valid(); iter->Next()) {
       // std::cout << ">> iter...\n";
       key = iter->key();
@@ -55,7 +54,9 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
       };
       auto key2 = parsedInternalKey.user_key.ToString();
       auto& memo = DBImpl::um.memo_;
+      DBImpl::um.mutex_.Lock();
       auto it = memo.find(key2);
+      DBImpl::um.mutex_.Unlock();
       if (it == memo.end()) {
         throw std::runtime_error("key not found in memo");
       } else {
@@ -101,7 +102,6 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
       //   }
       // }
     }
-    DBImpl::um.mutex_.Unlock();
     if (!key.empty()) {
       meta->largest.DecodeFrom(key);
     }

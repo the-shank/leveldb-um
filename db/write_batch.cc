@@ -106,9 +106,9 @@ void WriteBatch::Put(const Slice& key, const Slice& value) {
   // 1. increase the timestamp
   uint64_t ts = DBImpl::global_timestamp++;
   // 2. create entry in updatememo
-  DBImpl::um.mutex_.Lock();
-  auto& memo = DBImpl::um.memo_;
   auto key_str{key.ToString()};
+  auto& memo = DBImpl::um.memo_;
+  DBImpl::um.mutex_.Lock();
   memo[key_str] = ts;
   // auto it = memo.find(key_str);
   // if (it == memo.end()) {
@@ -131,9 +131,9 @@ void WriteBatch::Delete(const Slice& key) {
   // 1. increase the timestamp
   uint64_t ts = DBImpl::global_timestamp++;
   // 2. create entry in updatememo
-  DBImpl::um.mutex_.Lock();
   auto& memo = DBImpl::um.memo_;
   auto key_str{key.ToString()};
+  DBImpl::um.mutex_.Lock();
   memo[key_str] = ts;
   // if (memo.find(key_str) == memo.end()) {
   //   // NOTE: this should never happen, but just in case

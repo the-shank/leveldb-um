@@ -998,12 +998,13 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
 #endif
 
     // TODO: shank: check if this entry is obsoleted by the UM
-    DBImpl::um.mutex_.Lock();
     auto& memo = DBImpl::um.memo_;
     Slice value{input->value()};
     uint64_t ts = DecodeFixed64(value.data() + value.size() - 8);
     auto key_str{ikey.user_key.ToString()};
+    // DBImpl::um.mutex_.Lock();
     auto it = memo.find(key_str);
+    // DBImpl::um.mutex_.Unlock();
     if (it == memo.end()) {
       throw std::runtime_error("key not found in UM");
     } else {
@@ -1033,7 +1034,6 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
       //   throw std::runtime_error("key deleted from UM2");
       // }
     }
-    DBImpl::um.mutex_.Unlock();
 
     // if (drop) {
     //   std::cout << ">>>> drop=true : " << key.ToString() << "\n";
@@ -1205,12 +1205,13 @@ Status DBImpl::Get(const ReadOptions& options, const Slice& key,
   }
 
   if (!s.IsNotFound()) {
-    DBImpl::um.mutex_.Lock();
     auto& memo = DBImpl::um.memo_;
     size_t value_size = value->size();
     uint64_t ts = DecodeFixed64(value->c_str() + value_size - 8);
     auto key_str{key.ToString()};
+    DBImpl::um.mutex_.Lock();
     auto it = memo.find(key_str);
+    DBImpl::um.mutex_.Unlock();
     // if (memo.count(key_str) > 0) {
     if (it != memo.end()) {
       if (it->second > ts) {
@@ -1221,7 +1222,6 @@ Status DBImpl::Get(const ReadOptions& options, const Slice& key,
         // value->erase(8, std::string::npos);
       }
     }
-    DBImpl::um.mutex_.Unlock();
   }
 
   if (have_stat_update && current->UpdateStats(stats)) {
